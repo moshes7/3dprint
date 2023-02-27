@@ -3,6 +3,7 @@ from pathlib import Path
 import cv2
 import numpy as np
 import pymorph
+# import skimage
 
 def resize(image, width=None, height=None, inter=cv2.INTER_AREA):
     # initialize the dimensions of the image to be resized and
@@ -96,7 +97,7 @@ def morph_thinning(img, iterations=3, se_size=6, display=False):
     https://theailearner.com/tag/thickening-opencv-python/
     """
     # se = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (se_size, se_size))
-    se = cv2.getStructuringElement(cv2.MORPH_RECT, (se_size, se_size))
+    se = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (se_size, se_size))
 
     thin = np.zeros(img.shape,dtype='uint8')
     img_out = img.copy()
@@ -137,7 +138,8 @@ def thicken_img(img, display=False):
 
 def close_img(img, se_size=5, display=False):
 
-    se = cv2.getStructuringElement(cv2.MORPH_RECT, (se_size, se_size))
+    se = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (se_size, se_size))
+    # se = skimage.morphology.ball(se_size)
     closed = cv2.morphologyEx(img, cv2.MORPH_CLOSE, se)
 
     if display:
@@ -150,7 +152,7 @@ def close_img(img, se_size=5, display=False):
 
 def dilate_img(img, se_size=5, display=False):
 
-    se = cv2.getStructuringElement(cv2.MORPH_RECT, (se_size, se_size))
+    se = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (se_size, se_size))
     closed = cv2.morphologyEx(img, cv2.MORPH_DILATE  , se)
 
     if display:
@@ -183,7 +185,7 @@ def process_img(img_file, thick_type='closing', se_size=5, display=0):
     img = transparent_background(img, display=display>0)
 
     # save output image
-    img_out_path = Path(img_file).parent / 'output_{}'.format(thick_type) / Path(img_file).name
+    img_out_path = Path(img_file).parent.parent / 'output_{}'.format(thick_type) / Path(img_file).name
     img_out_path.parent.mkdir(exist_ok=True, parents=True)
     cv2.imwrite(img_out_path.with_suffix('.png').as_posix(), img)
 
@@ -250,9 +252,34 @@ def main_img_list():
 
     pass
 
+
+
+def main_root_dir():
+
+    # img_ref_file = 'C:/Users/Moshe/Sync/Projects/3d_printing/images/automatic_processing/reference.jpg'
+    # img_ref = cv2.imread(img_ref_file, 0)
+    # h_ref, w_ref = img_ref.shape
+
+    input_dir = 'C:/Users/shay/Desktop/projects/envs/images/input'
+
+    img_path_list = Path(input_dir).glob('*')
+
+    # display = False
+    display = 0
+    se_size = 10
+    thick_type = 'closing'
+    thick_type = 'thickening'
+    thick_type = 'dilate'
+
+    for img_path in img_path_list:
+        process_img(img_path.as_posix(), thick_type, se_size, display)
+
+    pass
+
 if __name__ == '__main__':
 
     # main()
-    main_img_list()
+    # main_img_list()
+    main_root_dir()
 
     pass
