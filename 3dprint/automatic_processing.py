@@ -147,6 +147,19 @@ def close_img(img, se_size=5, display=False):
 
     return closed
 
+
+def dilate_img(img, se_size=5, display=False):
+
+    se = cv2.getStructuringElement(cv2.MORPH_RECT, (se_size, se_size))
+    closed = cv2.morphologyEx(img, cv2.MORPH_DILATE  , se)
+
+    if display:
+        cv2.imshow('original', img)
+        cv2.imshow('dilated', closed)
+        cv2.waitKey(0)
+
+    return closed
+
 def process_img(img_file, thick_type='closing', se_size=5, display=0):
 
     img = cv2.imread(img_file, 0)
@@ -157,11 +170,13 @@ def process_img(img_file, thick_type='closing', se_size=5, display=0):
 
     img = inverse_img(img, display=display>2)
 
-    assert thick_type in ['closing', 'thickening']
+    assert thick_type in ['closing', 'thickening', 'dilate']
     if thick_type == 'closing':
         img = close_img(img, se_size, display=display>1)
     elif thick_type == 'thickening':
         img = thicken_img(img, display=display)
+    elif thick_type == 'thickening':
+        img = dilate_img(img, se_size, display=display>1)
 
     img = inverse_img(img, display=display>1)
 
@@ -223,9 +238,10 @@ def main_img_list():
 
     # display = False
     display = 0
-    se_size = 5
+    se_size = 10
     # thick_type = 'closing'
     thick_type = 'thickening'
+    thick_type = 'dilate'
 
     for img_name in img_name_list:
         img_file = (Path(input_dir) / img_name).as_posix()
