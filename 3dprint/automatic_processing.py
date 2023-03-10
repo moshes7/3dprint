@@ -173,7 +173,7 @@ def process_img(img_file, thick_type='dilate_closing', se_size=5, se_size_closin
 
     img = inverse_img(img, display=display>2)
 
-    assert thick_type in ['closing', 'thickening', 'dilate', 'dilate_closing']
+    assert thick_type in ['closing', 'thickening', 'dilate', 'dilate_closing', 'closing_dilate']
     if thick_type == 'closing':
         img = close_img(img, se_size, display=display>1)
         name_sfx = '_{}_se_size_{:02d}'.format(thick_type, se_size)
@@ -187,6 +187,10 @@ def process_img(img_file, thick_type='dilate_closing', se_size=5, se_size_closin
         img = close_img(img, se_size, display=display>1)
         img = dilate_img(img, se_size=se_size_closing, display=display>1)
         name_sfx = '_{}_se_size_{:02d}_{:02d}'.format(thick_type, se_size, se_size_closing)
+    if thick_type == 'closing_dilate':
+        img = dilate_img(img, se_size=se_size_closing, display=display>1)
+        img = close_img(img, se_size, display=display>1)
+        name_sfx = '_{}_se_size_{:02d}_{:02d}'.format(thick_type, se_size_closing, se_size)
 
     img = inverse_img(img, display=display>1)
 
@@ -277,9 +281,9 @@ def main_root_dir():
     display = False
     # display = 5
 
-    thick_type_list = ['closing', 'dilate', 'dilate_closing', 'thickening']
+    thick_type_list = ['closing', 'dilate', 'dilate_closing', 'closing_dilate', 'thickening']
     se_size_list = [3, 5, 10, 15]
-    # thick_type_list = ['dilate_closing']
+    # thick_type_list = ['closing_dilate']
     # se_size_list = [5]
     se_size_closing = 5
 
