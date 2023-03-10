@@ -1,4 +1,5 @@
 from pathlib import Path
+from tqdm import tqdm
 
 import cv2
 import numpy as np
@@ -166,18 +167,21 @@ def process_img(img_file, thick_type='closing', se_size=5, display=0):
 
     img = cv2.imread(img_file, 0)
 
-    img = resize_by_larger_dim(img, w_ref=1600, h_ref=1400, display=display>3)
+    img = resize_by_larger_dim(img, w_ref=1133, h_ref=1133, display=display>3)
 
     img = threshold_img(img, display=display>2)
 
     img = inverse_img(img, display=display>2)
 
-    assert thick_type in ['closing', 'thickening', 'dilate']
+    assert thick_type in ['closing', 'thickening', 'dilate', 'dilate_closing']
     if thick_type == 'closing':
         img = close_img(img, se_size, display=display>1)
     elif thick_type == 'thickening':
         img = thicken_img(img, display=display)
-    elif thick_type == 'thickening':
+    elif thick_type == 'dilate':
+        img = dilate_img(img, se_size, display=display>1)
+    if thick_type == 'dilate_closing':
+        img = close_img(img, se_size, display=display>1)
         img = dilate_img(img, se_size, display=display>1)
 
     img = inverse_img(img, display=display>1)
@@ -185,7 +189,7 @@ def process_img(img_file, thick_type='closing', se_size=5, display=0):
     img = transparent_background(img, display=display>0)
 
     # save output image
-    img_out_path = Path(img_file).parent.parent / 'output_{}'.format(thick_type) / Path(img_file).name
+    img_out_path = Path(img_file).parent.parent / 'output_{}_se_size_{:02d}'.format(thick_type, se_size) / Path(img_file).name
     img_out_path.parent.mkdir(exist_ok=True, parents=True)
     cv2.imwrite(img_out_path.with_suffix('.png').as_posix(), img)
 
@@ -260,19 +264,25 @@ def main_root_dir():
     # img_ref = cv2.imread(img_ref_file, 0)
     # h_ref, w_ref = img_ref.shape
 
-    input_dir = 'C:/Users/shay/Desktop/projects/envs/images/input'
+    # input_dir = 'C:/Users/shay/Desktop/projects/envs/images/input'
+    input_dir = 'C:/Users/Moshe/Sync/Projects/3d_printing/images/tests/input/'
+    input_dir = 'C:/Users/Moshe/Sync/Projects/3d_printing/images/selected pic for testing -20230310T124257Z-001/selected pic for testing/'
 
-    img_path_list = Path(input_dir).glob('*')
+    img_path_list = list(Path(input_dir).glob('*'))
 
-    # display = False
-    display = 0
-    se_size = 10
-    thick_type = 'closing'
-    thick_type = 'thickening'
-    thick_type = 'dilate'
+    display = False
+    # display = 5
 
-    for img_path in img_path_list:
-        process_img(img_path.as_posix(), thick_type, se_size, display)
+    thick_type_list = ['closing', 'dilate', 'dilate_closing', 'thickening']
+    # thick_type_list = ['thickening']
+    se_size_list = [3, 5, 10, 15]
+    # thick_type_list = ['dilate']
+    # se_size_list = [3]
+
+    for thick_type in tqdm(thick_type_list, desc='thick type'):
+        for se_size in tqdm(se_size_list, desc='se size'):
+            for img_path in tqdm(img_path_list, desc='img path'):
+                process_img(img_path.as_posix(), thick_type, se_size, display)
 
     pass
 
