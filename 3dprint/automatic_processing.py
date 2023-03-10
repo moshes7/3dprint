@@ -163,7 +163,7 @@ def dilate_img(img, se_size=5, display=False):
 
     return closed
 
-def process_img(img_file, thick_type='closing', se_size=5, display=0):
+def process_img(img_file, thick_type='dilate_closing', se_size=5, se_size_closing=15, display=0):
 
     img = cv2.imread(img_file, 0)
 
@@ -176,20 +176,24 @@ def process_img(img_file, thick_type='closing', se_size=5, display=0):
     assert thick_type in ['closing', 'thickening', 'dilate', 'dilate_closing']
     if thick_type == 'closing':
         img = close_img(img, se_size, display=display>1)
+        name_sfx = '_{}_se_size_{:02d}'.format(thick_type, se_size)
     elif thick_type == 'thickening':
         img = thicken_img(img, display=display)
+        name_sfx = '_{}_se_size_{:02d}'.format(thick_type, se_size)
     elif thick_type == 'dilate':
         img = dilate_img(img, se_size, display=display>1)
+        name_sfx = '_{}_se_size_{:02d}'.format(thick_type, se_size)
     if thick_type == 'dilate_closing':
         img = close_img(img, se_size, display=display>1)
-        img = dilate_img(img, se_size, display=display>1)
+        img = dilate_img(img, se_size=se_size_closing, display=display>1)
+        name_sfx = '_{}_se_size_{:02d}_{:02d}'.format(thick_type, se_size, se_size_closing)
 
     img = inverse_img(img, display=display>1)
 
     img = transparent_background(img, display=display>0)
 
     # save output image
-    img_out_path = Path(img_file).parent.parent / 'output_{}_se_size_{:02d}'.format(thick_type, se_size) / Path(img_file).name
+    img_out_path = Path(img_file).parent.parent / 'output{}'.format(name_sfx) / Path(img_file).name
     img_out_path.parent.mkdir(exist_ok=True, parents=True)
     cv2.imwrite(img_out_path.with_suffix('.png').as_posix(), img)
 
@@ -274,15 +278,15 @@ def main_root_dir():
     # display = 5
 
     thick_type_list = ['closing', 'dilate', 'dilate_closing', 'thickening']
-    # thick_type_list = ['thickening']
     se_size_list = [3, 5, 10, 15]
-    # thick_type_list = ['dilate']
-    # se_size_list = [3]
+    # thick_type_list = ['dilate_closing']
+    # se_size_list = [5]
+    se_size_closing = 5
 
     for thick_type in tqdm(thick_type_list, desc='thick type'):
         for se_size in tqdm(se_size_list, desc='se size'):
             for img_path in tqdm(img_path_list, desc='img path'):
-                process_img(img_path.as_posix(), thick_type, se_size, display)
+                process_img(img_path.as_posix(), thick_type, se_size, se_size_closing, display)
 
     pass
 
