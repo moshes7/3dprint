@@ -273,26 +273,19 @@ def main_root_dir():
     # h_ref, w_ref = img_ref.shape
 
     # input_dir = 'C:/Users/shay/Desktop/projects/envs/images/input'
-    # input_dir = 'C:/Users/Moshe/Sync/Projects/3d_printing/images/tests/input/'
-    # input_dir = 'C:/Users/Moshe/Sync/Projects/3d_printing/images/selected pic for testing -20230310T124257Z-001/selected pic for testing/'
-    input_dir = 'C:/Users/shay/Desktop/KAVIM22.02.23/abstract.geometric'
+    input_dir = 'C:/Users/Moshe/Sync/Projects/3d_printing/images/tests/input/'
+    input_dir = 'C:/Users/Moshe/Sync/Projects/3d_printing/images/selected pic for testing -20230310T124257Z-001/selected pic for testing/'
 
     img_path_list = list(Path(input_dir).glob('*'))
 
     display = False
     # display = 5
 
-    # thick_type_list = ['closing', 'dilate', 'dilate_closing', 'closing_dilate', 'thickening']
-    # se_size_list = [3, 5, 10, 15]
-    # se_size_closing = 5
-
-    thick_type_list = ['closing', 'dilate', 'dilate_closing', 'closing_dilate']
+    thick_type_list = ['closing', 'dilate', 'dilate_closing', 'closing_dilate', 'thickening']
     se_size_list = [3, 5, 10, 15]
-    se_size_closing = 5
-
     # thick_type_list = ['closing_dilate']
     # se_size_list = [5]
-    # se_size_closing = 5
+    se_size_closing = 5
 
     for thick_type in tqdm(thick_type_list, desc='thick type'):
         for se_size in tqdm(se_size_list, desc='se size'):
