@@ -37,7 +37,7 @@ def resize(image, width=None, height=None, inter=cv2.INTER_AREA):
     # return the resized image
     return resized
 
-def resize_by_larger_dim(img, w_ref=1600, h_ref=1400, display=False):
+def resize_by_larger_dim(img, w_ref=1133, h_ref=1133, display=False):
 
     h, w = img.shape
 
@@ -50,7 +50,7 @@ def resize_by_larger_dim(img, w_ref=1600, h_ref=1400, display=False):
         height = h_ref
         interp = cv2.INTER_AREA if h > h_ref else cv2.INTER_CUBIC
 
-    img_resized = resize(img, width, height)
+    img_resized = resize(img, width, height, interp)
 
     if display:
         cv2.imshow('Input', img)
@@ -58,6 +58,25 @@ def resize_by_larger_dim(img, w_ref=1600, h_ref=1400, display=False):
         cv2.waitKey(0)
 
     return img_resized
+
+def smooth_img(img, method='median', display=False):
+
+    assert method in ['gaussian', 'median', 'bilateral']
+
+    if method == 'gaussian':
+        img_smoothed = cv2.GaussianBlur(img,(5,5),0)
+    elif method == 'median':
+        img_smoothed = cv2.medianBlur(img, 3)
+    elif method == 'bilateral':
+        img_smoothed = cv2.bilateralFilter(img,9,75,75)
+
+    if display:
+        cv2.imshow('Input', img)
+        cv2.imshow('Resized', img_smoothed)
+        cv2.waitKey(0)
+
+    return img_smoothed
+
 
 def threshold_img(img, display=False):
 
@@ -82,7 +101,7 @@ def inverse_img(img, display=False):
 def transparent_background(img, display=False):
 
     bgr = cv2.cvtColor(img, cv2.COLOR_GRAY2BGR)
-    alpha = np.sum(bgr, axis=-1) > 0
+    alpha = np.sum(bgr, axis=-1) == 0
     alpha = np.uint8(alpha * 255)
     result = np.dstack([bgr, alpha])  # Add the mask as alpha channel
 
@@ -169,6 +188,8 @@ def process_img(img_file, thick_type='dilate_closing', se_size=5, se_size_closin
 
     img = resize_by_larger_dim(img, w_ref=1133, h_ref=1133, display=display>3)
 
+    # img = smooth_img(img, display=display>3)
+
     img = threshold_img(img, display=display>2)
 
     img = inverse_img(img, display=display>2)
@@ -194,10 +215,15 @@ def process_img(img_file, thick_type='dilate_closing', se_size=5, se_size_closin
 
     img = inverse_img(img, display=display>1)
 
-    img = transparent_background(img, display=display>0)
+
 
     # save output image
-    img_out_path = Path(img_file).parent.parent / 'output{}'.format(name_sfx) / Path(img_file).name
+    img_out_path = Path(img_file).parent.parent / 'output{}'.format(name_sfx) / 'image' / Path(img_file).name
+    img_out_path.parent.mkdir(exist_ok=True, parents=True)
+    cv2.imwrite(img_out_path.with_suffix('.png').as_posix(), img)
+
+    img = transparent_background(img, display=display>0)
+    img_out_path = Path(img_file).parent.parent / 'output{}'.format(name_sfx) / 'transparent' / Path(img_file).name
     img_out_path.parent.mkdir(exist_ok=True, parents=True)
     cv2.imwrite(img_out_path.with_suffix('.png').as_posix(), img)
 
@@ -273,19 +299,26 @@ def main_root_dir():
     # h_ref, w_ref = img_ref.shape
 
     # input_dir = 'C:/Users/shay/Desktop/projects/envs/images/input'
-    input_dir = 'C:/Users/Moshe/Sync/Projects/3d_printing/images/tests/input/'
-    input_dir = 'C:/Users/Moshe/Sync/Projects/3d_printing/images/selected pic for testing -20230310T124257Z-001/selected pic for testing/'
+    # input_dir = 'C:/Users/Moshe/Sync/Projects/3d_printing/images/tests/input/'
+    # input_dir = 'C:/Users/Moshe/Sync/Projects/3d_printing/images/selected pic for testing -20230310T124257Z-001/selected pic for testing/'
+    input_dir = 'C:/Users/shay/Desktop/KAVIM22.02.23/abstract.geometric'
 
     img_path_list = list(Path(input_dir).glob('*'))
 
     display = False
     # display = 5
 
-    thick_type_list = ['closing', 'dilate', 'dilate_closing', 'closing_dilate', 'thickening']
-    se_size_list = [3, 5, 10, 15]
+    # thick_type_list = ['closing', 'dilate', 'dilate_closing', 'closing_dilate', 'thickening']
+    # se_size_list = [3, 5, 10, 15]
+    # se_size_closing = 5
+
+    thick_type_list = ['closing', 'dilate', 'dilate_closing', 'closing_dilate']
+    se_size_list = [5, 10]
+    se_size_closing = 5
+
     # thick_type_list = ['closing_dilate']
     # se_size_list = [5]
-    se_size_closing = 5
+    # se_size_closing = 5
 
     for thick_type in tqdm(thick_type_list, desc='thick type'):
         for se_size in tqdm(se_size_list, desc='se size'):
