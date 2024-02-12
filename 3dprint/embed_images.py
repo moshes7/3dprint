@@ -131,9 +131,8 @@ def embed_single_line_on_background():
     img_on_bg_cropped = cv2.addWeighted(bg_crop, 1, img, 1, 0)
 
     # show result
-
     img_on_bg = bg.copy()
-    img_on_bg[y_start:y_end, x_start:x_end]
+    img_on_bg[y_start:y_end, x_start:x_end] = img_on_bg_cropped
     # cv2.imshow("img_on_bg", img_on_bg)
     # cv2.waitKey(0)
 
