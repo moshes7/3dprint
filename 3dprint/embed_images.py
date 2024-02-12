@@ -83,8 +83,13 @@ def inverse_img(img, display=False):
 
 def embed_single_line_on_background():
 
-    img_file = 'C:/Users/Moshe/Sync/Projects/3d_printing/images/backgrounds/rabbit.jpeg'
+    # img_file = 'C:/Users/Moshe/Sync/Projects/3d_printing/images/backgrounds/rabbit.jpeg'
+    img_file = 'C:/Users/Moshe/Sync/Projects/3d_printing/images/backgrounds/teddy_bear.jpeg'
+    img_file = 'C:/Users/Moshe/Sync/Projects/3d_printing/images/backgrounds/mother_and_child.jpeg'
+    img_file = 'C:/Users/Moshe/Sync/Projects/3d_printing/images/backgrounds/princess_and_butterfly.png'
     background_file = 'C:/Users/Moshe/Sync/Projects/3d_printing/images/backgrounds/background_1.jpg'
+    # background_file = 'C:/Users/Moshe/Sync/Projects/3d_printing/images/backgrounds/background_2.jpg'
+    # background_file = 'C:/Users/Moshe/Sync/Projects/3d_printing/images/backgrounds/background_3.jpg'
 
     display = 1
 
@@ -101,10 +106,10 @@ def embed_single_line_on_background():
 
     # remove img
     img = inverse_img(img, display=display>2)
-    # img1 = transparent_background(img_orig, display)
-    img = remove(img)
+    img = transparent_background(img, display>2)
+    # img = remove(img)
     img = inverse_img(img, display=display>2)
-    img = cv2.cvtColor(bg, cv2.COLOR_BGRA2GRAY)
+    img = cv2.cvtColor(img, cv2.COLOR_BGRA2GRAY)
 
     if display > 2:
         cv2.imshow('original', img_orig)
@@ -114,12 +119,12 @@ def embed_single_line_on_background():
     # embed img on background
     # adapted from: https://stackoverflow.com/questions/69620706/overlay-image-on-another-image-with-opencv-and-numpy
     # extract alpha channel from foreground image as mask and make 3 channels
-    alpha = img[:,:,3]
-    alpha = cv2.merge([alpha,alpha,alpha])
-
-    # extract bgr channels from foreground image
-    front = img[:,:,0:3]
-
+    # alpha = img[:,:,3]
+    # alpha = cv2.merge([alpha,alpha,alpha])
+    #
+    # # extract bgr channels from foreground image
+    # front = img[:,:,0:3]
+    #
     # blend the two images using the alpha channel as controlling mask
     # result = np.where(alpha==(0,0,0), bg, front)
 
@@ -131,17 +136,22 @@ def embed_single_line_on_background():
     bg_crop = bg[y_start:y_end, x_start:x_end]
 
     # img_on_bg_cropped = cv2.addWeighted(bg_crop, 1, img, 1, 0)
-    img_on_bg_cropped = np.where(alpha<=(20,20,20), bg_crop, front)
+    # img_on_bg_cropped = np.where(alpha<=(20,20,20), bg_crop, front)
+
+    b_channel, g_channel, r_channel = cv2.split(bg_crop)
+    img_on_bg_cropped = cv2.merge((b_channel, g_channel, r_channel, img))
+
 
     # show result
-    img_on_bg = bg.copy()
-    img_on_bg[y_start:y_end, x_start:x_end] = img_on_bg_cropped
+    # img_on_bg = bg.copy()
+    img_on_bg = cv2.cvtColor(bg, cv2.COLOR_BGR2BGRA)
+    img_on_bg[y_start:y_end, x_start:x_end, ...] = img_on_bg_cropped
     # cv2.imshow("img_on_bg", img_on_bg)
     # cv2.waitKey(0)
 
     output_dir = Path(img_file).parent / 'output'
     output_dir.mkdir(exist_ok=True, parents=True)
-    output_file_name = '{}_{}.png'.format(Path(background_file).name, Path(img_file).name)
+    output_file_name = '{}_{}.png'.format(Path(background_file).stem, Path(img_file).stem)
     output_file = output_dir / output_file_name
     cv2.imwrite(output_file.as_posix(), img_on_bg)
 
