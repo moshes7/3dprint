@@ -93,7 +93,8 @@ def embed_single_line_on_background():
     img_orig = cv2.imread(img_file, 0)
     bg = cv2.imread(background_file, 0)
 
-    bg = cv2.cvtColor(bg, cv2.COLOR_BGR2BGRA)
+    # bg = cv2.cvtColor(bg, cv2.COLOR_BGR2BGRA)
+    bg = cv2.cvtColor(bg, cv2.COLOR_BGR2RGB)
 
     img = resize_by_larger_dim(img_orig, w_ref=1024, h_ref=1024, display=display>3)
 
@@ -103,6 +104,7 @@ def embed_single_line_on_background():
     # img1 = transparent_background(img_orig, display)
     img = remove(img)
     img = inverse_img(img, display=display>2)
+    img = cv2.cvtColor(bg, cv2.COLOR_BGRA2GRAY)
 
     if display > 2:
         cv2.imshow('original', img_orig)
@@ -112,23 +114,24 @@ def embed_single_line_on_background():
     # embed img on background
     # adapted from: https://stackoverflow.com/questions/69620706/overlay-image-on-another-image-with-opencv-and-numpy
     # extract alpha channel from foreground image as mask and make 3 channels
-    # alpha = img[:,:,3]
-    # alpha = cv2.merge([alpha,alpha,alpha])
-    #
-    # # extract bgr channels from foreground image
-    # front = img[:,:,0:3]
+    alpha = img[:,:,3]
+    alpha = cv2.merge([alpha,alpha,alpha])
+
+    # extract bgr channels from foreground image
+    front = img[:,:,0:3]
 
     # blend the two images using the alpha channel as controlling mask
     # result = np.where(alpha==(0,0,0), bg, front)
 
-    left_top = (1500, 1500)
+    left_top = (1600, 750)
     x_start = left_top[0]
     x_end = x_start + img.shape[1]
     y_start = left_top[1]
     y_end = y_start + img.shape[0]
     bg_crop = bg[y_start:y_end, x_start:x_end]
 
-    img_on_bg_cropped = cv2.addWeighted(bg_crop, 1, img, 1, 0)
+    # img_on_bg_cropped = cv2.addWeighted(bg_crop, 1, img, 1, 0)
+    img_on_bg_cropped = np.where(alpha<=(20,20,20), bg_crop, front)
 
     # show result
     img_on_bg = bg.copy()
