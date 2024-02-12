@@ -283,7 +283,6 @@ def main_img_list():
     thick_type = 'thickening'
     thick_type = 'dilate'
 
-
     for img_name in img_name_list:
         img_file = (Path(input_dir) / img_name).as_posix()
         process_img(img_file, thick_type, se_size, display)
