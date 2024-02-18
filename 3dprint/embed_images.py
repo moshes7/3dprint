@@ -163,8 +163,25 @@ def example_embed_single_line_on_background():
     pass
 
 
+def playground_embed_singeline_between_fingers():
+
+    hand_1_file = 'C:/Users/Moshe/Sync/Projects/3d_printing/images/backgrounds/hand_1.png'
+    hand_2_file = 'C:/Users/Moshe/Sync/Projects/3d_printing/images/backgrounds/hand_2.png'
+
+    img_file = 'C:/Users/Moshe/Sync/Projects/3d_printing/images/backgrounds/rabbit.jpeg'
+
+    display = 0
+    output_subdir = '4_hand_baseline'
+
+    embed_single_line_on_background(img_file, hand_1_file,
+                                    size_wh_wanted=(200, 200), left_top=(250, 30),
+                                    output_subdir=output_subdir,
+                                    display=display)
+    pass
+
 if __name__ == '__main__':
 
-    example_embed_single_line_on_background()
+    # example_embed_single_line_on_background()
+    playground_embed_singeline_between_fingers()
 
     pass
