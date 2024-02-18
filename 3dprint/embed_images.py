@@ -129,7 +129,7 @@ def embed_single_line_on_background(img_file, background_file,
         cv2.imshow('img_on_bg', img_on_bg)
         cv2.waitKey(0)
 
-    pass
+    return img_on_bg
 
 
 def example_embed_single_line_on_background():
@@ -173,10 +173,31 @@ def playground_embed_singeline_between_fingers():
     display = 0
     output_subdir = '4_hand_baseline'
 
-    embed_single_line_on_background(img_file, hand_1_file,
-                                    size_wh_wanted=(200, 200), left_top=(250, 30),
-                                    output_subdir=output_subdir,
-                                    display=display)
+    # put image on hand 1
+    img_on_hand_1 = embed_single_line_on_background(img_file, hand_1_file,
+                                                    size_wh_wanted=(200, 200), left_top=(250, 30),
+                                                    output_subdir=output_subdir, display=display)
+
+    # put hand 2 on img
+    hand_2 = cv2.imread(hand_2_file, 0)
+    hand_2 = cv2.cvtColor(hand_2, cv2.COLOR_BGR2BGRA)
+    hand_2_on_img = cv2.addWeighted(img_on_hand_1, 0.5, hand_2, 0.5, 0)
+
+    if display > 0:
+        cv2.imshow('img_on_hand_1', img_on_hand_1)
+        cv2.imshow('hand_2_on_img', hand_2_on_img)
+        cv2.waitKey(0)
+        cv2.destroyAllWindows()
+
+    output_dir = Path(img_file).parent / 'output' / output_subdir
+    output_dir.mkdir(exist_ok=True, parents=True)
+    output_file_name = '{}_on_hand_1.png'.format(Path(img_file).stem)
+    output_file = output_dir / output_file_name
+    cv2.imwrite(output_file.as_posix(), img_on_hand_1)
+    output_file_name = 'hand_2_on_{}.png'.format(Path(img_file).stem)
+    output_file = output_dir / output_file_name
+    cv2.imwrite(output_file.as_posix(), hand_2)
+
     pass
 
 if __name__ == '__main__':
