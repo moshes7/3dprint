@@ -37,7 +37,7 @@ def resize(image, width=None, height=None, inter=cv2.INTER_AREA):
 
 def resize_by_larger_dim(img, w_ref=1024, h_ref=1024, display=False):
 
-    h, w = img.shape
+    h, w = img.shape[0:2]
 
     if w >= h:
         width = w_ref
@@ -211,6 +211,8 @@ def playground_2_embed_singeline_between_fingers():
     hand_1_file = 'C:/Users/Moshe/Sync/Projects/3d_printing/images/backgrounds/hand_1.png'
     hand_2_file = 'C:/Users/Moshe/Sync/Projects/3d_printing/images/backgrounds/hand_2.png'
     img_file = 'C:/Users/Moshe/Sync/Projects/3d_printing/images/backgrounds/rabbit.jpeg'
+    img_file = 'C:/Users/Moshe/Sync/Projects/3d_printing/images/backgrounds/princess_and_butterfly.png'
+    img_file = 'C:/Users/Moshe/Sync/Projects/3d_printing/images/backgrounds/teddy_bear.jpeg'
 
     display = 1
 
@@ -218,6 +220,8 @@ def playground_2_embed_singeline_between_fingers():
     hand_2 = cv2.imread(hand_2_file, cv2.IMREAD_COLOR)
     img = cv2.imread(img_file, cv2.IMREAD_COLOR)
 
+    # hand 1
+    # --------
     # get masks
     img2gray = cv2.cvtColor(hand_1, cv2.COLOR_BGR2GRAY)
     ret, mask = cv2.threshold(img2gray, 10, 255, cv2.THRESH_BINARY)
@@ -239,20 +243,59 @@ def playground_2_embed_singeline_between_fingers():
 
     # create white image
     out_img = np.zeros(hand_1.shape, dtype=np.uint8)
-    # out_img.fill(255)
+    out_img.fill(255)
 
     # black-out the area of logo in ROI
     rows, cols, channels = hand_1.shape
     roi = hand_1[0:rows, 0:cols ]
     hand_1_fg = cv2.bitwise_and(roi, roi, mask=mask)
 
-    dst = cv2.add(out_img, hand_1_fg)
+    # dst = cv2.add(out_img, hand_1_fg)
+    r, c = np.where(mask==(255))
+    dst1 = out_img.copy()
+    dst1[r, c, :] = hand_1_fg[r, c, :]
 
     if display > 1:
-        cv2.imshow('dst', dst)
+        cv2.imshow('dst1', dst1)
         cv2.waitKey(0)
         cv2.destroyAllWindows()
 
+    # img
+    # --------
+    img = resize_by_larger_dim(img, w_ref=200, h_ref=200, display=display>3)
+    img = inverse_img(img, display=False)
+    img2gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+    ret, mask = cv2.threshold(img2gray, 10, 255, cv2.THRESH_BINARY)
+
+    if display > 1:
+        cv2.imshow('img', img)
+        cv2.imshow('img2gray', img2gray)
+        cv2.imshow('ret', ret)
+        cv2.imshow('mask', mask)
+        cv2.waitKey(0)
+        cv2.destroyAllWindows()
+
+    # black-out the area of logo in ROI
+    rows, cols, channels = img.shape
+    roi = hand_2[0:rows, 0:cols ]
+    img_fg = cv2.bitwise_and(roi, roi, mask=mask)
+    # img_fg = inverse_img(img_fg)
+
+    # dst2 = cv2.add(dst, hand_2_fg)
+    r, c = np.where(mask==(255))
+    dst2 = dst1.copy()
+    left = 250
+    top = 30
+    dst2[r + top, c + left, :] = img_fg[r, c, :]
+
+    if display > 1:
+        cv2.imshow('dst2', dst2)
+        cv2.waitKey(0)
+        cv2.destroyAllWindows()
+
+
+    # hand 2
+    # --------
     img2gray = cv2.cvtColor(hand_2, cv2.COLOR_BGR2GRAY)
     ret, mask = cv2.threshold(img2gray, 10, 255, cv2.THRESH_BINARY)
 
@@ -271,19 +314,23 @@ def playground_2_embed_singeline_between_fingers():
 
     # dst2 = cv2.add(dst, hand_2_fg)
     r, c = np.where(mask==(255))
-    dst2 = dst.copy()
-    dst2[r, c, :] = hand_2_fg[r, c, :]
+    dst3 = dst2.copy()
+    dst3[r, c, :] = hand_2_fg[r, c, :]
 
     if display > 1:
-        cv2.imshow('dst2', dst2)
+        cv2.imshow('dst3', dst3)
         cv2.waitKey(0)
         cv2.destroyAllWindows()
 
 
+    output_subdir = '4_hand_baseline'
+    output_dir = Path(img_file).parent / 'output' / output_subdir
+    output_dir.mkdir(exist_ok=True, parents=True)
+    output_file_name = '{}_between_hands.png'.format(Path(img_file).stem)
+    output_file = output_dir / output_file_name
+    cv2.imwrite(output_file.as_posix(), dst3)
 
-
-pass
-
+    pass
 
 
 if __name__ == '__main__':
