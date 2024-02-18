@@ -181,7 +181,8 @@ def playground_embed_singeline_between_fingers():
     # put hand 2 on img
     hand_2 = cv2.imread(hand_2_file, 0)
     hand_2 = cv2.cvtColor(hand_2, cv2.COLOR_BGR2BGRA)
-    hand_2_on_img = cv2.addWeighted(img_on_hand_1, 0.5, hand_2, 0.5, 0)
+    # hand_2_on_img = cv2.addWeighted(img_on_hand_1, 0.5, hand_2, 0.5, 0)
+    hand_2_on_img = (0.5 * img_on_hand_1 + 0.5 * hand_2).astype(np.uint8)
 
     if display > 0:
         cv2.imshow('img_on_hand_1', img_on_hand_1)
@@ -200,9 +201,95 @@ def playground_embed_singeline_between_fingers():
 
     pass
 
+def playground_2_embed_singeline_between_fingers():
+
+    """
+    Adapted from:
+    https://opencv24-python-tutorials.readthedocs.io/en/latest/py_tutorials/py_core/py_image_arithmetics/py_image_arithmetics.html
+    """
+
+    hand_1_file = 'C:/Users/Moshe/Sync/Projects/3d_printing/images/backgrounds/hand_1.png'
+    hand_2_file = 'C:/Users/Moshe/Sync/Projects/3d_printing/images/backgrounds/hand_2.png'
+    img_file = 'C:/Users/Moshe/Sync/Projects/3d_printing/images/backgrounds/rabbit.jpeg'
+
+    display = 1
+
+    hand_1 = cv2.imread(hand_1_file, cv2.IMREAD_COLOR)
+    hand_2 = cv2.imread(hand_2_file, cv2.IMREAD_COLOR)
+    img = cv2.imread(img_file, cv2.IMREAD_COLOR)
+
+    # get masks
+    img2gray = cv2.cvtColor(hand_1, cv2.COLOR_BGR2GRAY)
+    ret, mask = cv2.threshold(img2gray, 10, 255, cv2.THRESH_BINARY)
+    mask_inv = cv2.bitwise_not(mask)
+
+    # # Now black-out the area of logo in ROI
+    # img1_bg = cv2.bitwise_and(roi,roi,mask = mask_inv)
+    #
+    # # Take only region of logo from logo image.
+    # img2_fg = cv2.bitwise_and(img2,img2,mask = mask)
+
+    if display > 1:
+        cv2.imshow('hand_1', hand_1)
+        cv2.imshow('img2gray', img2gray)
+        cv2.imshow('ret', ret)
+        cv2.imshow('mask', mask)
+        cv2.waitKey(0)
+        cv2.destroyAllWindows()
+
+    # create white image
+    out_img = np.zeros(hand_1.shape, dtype=np.uint8)
+    # out_img.fill(255)
+
+    # black-out the area of logo in ROI
+    rows, cols, channels = hand_1.shape
+    roi = hand_1[0:rows, 0:cols ]
+    hand_1_fg = cv2.bitwise_and(roi, roi, mask=mask)
+
+    dst = cv2.add(out_img, hand_1_fg)
+
+    if display > 1:
+        cv2.imshow('dst', dst)
+        cv2.waitKey(0)
+        cv2.destroyAllWindows()
+
+    img2gray = cv2.cvtColor(hand_2, cv2.COLOR_BGR2GRAY)
+    ret, mask = cv2.threshold(img2gray, 10, 255, cv2.THRESH_BINARY)
+
+    if display > 1:
+        cv2.imshow('hand_2', hand_2)
+        cv2.imshow('img2gray', img2gray)
+        cv2.imshow('ret', ret)
+        cv2.imshow('mask', mask)
+        cv2.waitKey(0)
+        cv2.destroyAllWindows()
+
+    # black-out the area of logo in ROI
+    rows, cols, channels = hand_2.shape
+    roi = hand_2[0:rows, 0:cols ]
+    hand_2_fg = cv2.bitwise_and(roi, roi, mask=mask)
+
+    # dst2 = cv2.add(dst, hand_2_fg)
+    r, c = np.where(mask==(255))
+    dst2 = dst.copy()
+    dst2[r, c, :] = hand_2_fg[r, c, :]
+
+    if display > 1:
+        cv2.imshow('dst2', dst2)
+        cv2.waitKey(0)
+        cv2.destroyAllWindows()
+
+
+
+
+pass
+
+
+
 if __name__ == '__main__':
 
     # example_embed_single_line_on_background()
-    playground_embed_singeline_between_fingers()
+    # playground_embed_singeline_between_fingers()
+    playground_2_embed_singeline_between_fingers()
 
     pass
