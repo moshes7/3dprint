@@ -1,7 +1,7 @@
 import numpy as np
 import cv2
 from pathlib import Path
-from rembg import remove
+
 
 def resize(image, width=None, height=None, inter=cv2.INTER_AREA):
     # initialize the dimensions of the image to be resized and
@@ -81,11 +81,93 @@ def inverse_img(img, display=False):
 
     return inverse
 
-def embed_single_line_on_background():
+def embed_single_line_on_background(img_file, background_file,
+                                    size_wh_wanted=(1024, 1024), left_top=(1600, 750),
+                                    output_subdir='',
+                                    display=0):
+
+    # read images
+    img_orig = cv2.imread(img_file, 0)
+    bg = cv2.imread(background_file, cv2.IMREAD_COLOR)
+
+    # resize img
+    img = resize_by_larger_dim(img_orig, w_ref=size_wh_wanted[0], h_ref=size_wh_wanted[1], display=display>3)
+
+    # remove img background
+    img = inverse_img(img, display=display>1)
+    img = transparent_background(img, display>1)
+    img = inverse_img(img, display=display>1)
+    img = cv2.cvtColor(img, cv2.COLOR_BGRA2GRAY)
+
+    # embed img on cropped background
+    x_start = left_top[0]
+    x_end = x_start + img.shape[1]
+    y_start = left_top[1]
+    y_end = y_start + img.shape[0]
+    bg_crop = bg[y_start:y_end, x_start:x_end]
+
+    b_channel, g_channel, r_channel = cv2.split(bg_crop)
+    img_on_bg_cropped = cv2.merge((b_channel, g_channel, r_channel, img))
+
+    # put cropped background in full background
+    img_on_bg = cv2.cvtColor(bg, cv2.COLOR_BGR2BGRA)
+    img_on_bg[y_start:y_end, x_start:x_end, ...] = img_on_bg_cropped
+
+    # img_on_bg = cv2.cvtColor(img_on_bg, cv2.COLOR_BGRA2BGR)
+
+    # save result
+    output_dir = Path(img_file).parent / 'output' / output_subdir
+    output_dir.mkdir(exist_ok=True, parents=True)
+    output_file_name = '{}_{}.png'.format(Path(background_file).stem, Path(img_file).stem)
+    output_file = output_dir / output_file_name
+    cv2.imwrite(output_file.as_posix(), img_on_bg)
+
+    if display > 0:
+        cv2.imshow('original', img_orig)
+        cv2.imshow('transparent', img)
+        cv2.imshow('img_on_bg_cropped', img_on_bg_cropped)
+        cv2.imshow('img_on_bg', img_on_bg)
+        cv2.waitKey(0)
+
+    pass
+
+
+def example_embed_single_line_on_background():
+
+    img_file_list = [
+        'C:/Users/Moshe/Sync/Projects/3d_printing/images/backgrounds/rabbit.jpeg',
+        'C:/Users/Moshe/Sync/Projects/3d_printing/images/backgrounds/teddy_bear.jpeg',
+        'C:/Users/Moshe/Sync/Projects/3d_printing/images/backgrounds/mother_and_child.jpeg',
+    ]
+
+    background_file_list = [
+        'C:/Users/Moshe/Sync/Projects/3d_printing/images/backgrounds/background_1.jpg',
+        'C:/Users/Moshe/Sync/Projects/3d_printing/images/backgrounds/background_2.jpg',
+        'C:/Users/Moshe/Sync/Projects/3d_printing/images/backgrounds/background_3.jpg',
+    ]
+
+    display = 0
+    output_subdir = '1_baseline'
+    # output_subdir = '2_convert_to_bgr'
+    # output_subdir = '3_jpg'
+
+    for img_file in img_file_list:
+        for background_file in background_file_list:
+
+            embed_single_line_on_background(img_file, background_file,
+                                            size_wh_wanted=(1024, 1024),
+                                            left_top=(1600, 750),
+                                            output_subdir=output_subdir,
+                                            display=display)
+
+    pass
+
+
+def example_embed_single_line_on_background_prev():
 
     # img_file = 'C:/Users/Moshe/Sync/Projects/3d_printing/images/backgrounds/rabbit.jpeg'
-    img_file = 'C:/Users/Moshe/Sync/Projects/3d_printing/images/backgrounds/teddy_bear.jpeg'
-    img_file = 'C:/Users/Moshe/Sync/Projects/3d_printing/images/backgrounds/mother_and_child.jpeg'
+    # img_file = 'C:/Users/Moshe/Sync/Projects/3d_printing/images/backgrounds/teddy_bear.jpeg'
+    # img_file = 'C:/Users/Moshe/Sync/Projects/3d_printing/images/backgrounds/mother_and_child.jpeg'
     img_file = 'C:/Users/Moshe/Sync/Projects/3d_printing/images/backgrounds/princess_and_butterfly.png'
     background_file = 'C:/Users/Moshe/Sync/Projects/3d_printing/images/backgrounds/background_1.jpg'
     # background_file = 'C:/Users/Moshe/Sync/Projects/3d_printing/images/backgrounds/background_2.jpg'
@@ -96,10 +178,11 @@ def embed_single_line_on_background():
 
     # load images
     img_orig = cv2.imread(img_file, 0)
-    bg = cv2.imread(background_file, 0)
+    bg = cv2.imread(background_file, cv2.IMREAD_COLOR)
 
     # bg = cv2.cvtColor(bg, cv2.COLOR_BGR2BGRA)
-    bg = cv2.cvtColor(bg, cv2.COLOR_BGR2RGB)
+    # bg = cv2.cvtColor(bg, cv2.COLOR_BGR2RGB)
+    # bg = cv2.cvtColor(bg, cv2.COLOR_RGB2BGR)
 
     img = resize_by_larger_dim(img_orig, w_ref=1024, h_ref=1024, display=display>3)
 
@@ -149,6 +232,8 @@ def embed_single_line_on_background():
     # cv2.imshow("img_on_bg", img_on_bg)
     # cv2.waitKey(0)
 
+    # img_on_bg = cv2.cvtColor(img_on_bg, cv2.COLOR_BGRA2BGR)
+
     output_dir = Path(img_file).parent / 'output'
     output_dir.mkdir(exist_ok=True, parents=True)
     output_file_name = '{}_{}.png'.format(Path(background_file).stem, Path(img_file).stem)
@@ -160,6 +245,6 @@ def embed_single_line_on_background():
 
 if __name__ == '__main__':
 
-    embed_single_line_on_background()
+    example_embed_single_line_on_background()
 
     pass
