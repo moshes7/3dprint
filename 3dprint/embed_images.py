@@ -211,14 +211,14 @@ def playground_2_embed_singeline_between_fingers():
     hand_1_file = 'C:/Users/Moshe/Sync/Projects/3d_printing/images/backgrounds/hand_1.png'
     hand_2_file = 'C:/Users/Moshe/Sync/Projects/3d_printing/images/backgrounds/hand_2.png'
     img_file = 'C:/Users/Moshe/Sync/Projects/3d_printing/images/backgrounds/rabbit.jpeg'
-    img_file = 'C:/Users/Moshe/Sync/Projects/3d_printing/images/backgrounds/princess_and_butterfly.png'
-    img_file = 'C:/Users/Moshe/Sync/Projects/3d_printing/images/backgrounds/teddy_bear.jpeg'
+    # img_file = 'C:/Users/Moshe/Sync/Projects/3d_printing/images/backgrounds/princess_and_butterfly.png'
+    # img_file = 'C:/Users/Moshe/Sync/Projects/3d_printing/images/backgrounds/teddy_bear.jpeg'
 
     display = 1
 
     hand_1 = cv2.imread(hand_1_file, cv2.IMREAD_COLOR)
     hand_2 = cv2.imread(hand_2_file, cv2.IMREAD_COLOR)
-    img = cv2.imread(img_file, cv2.IMREAD_COLOR)
+    img_orig = cv2.imread(img_file, cv2.IMREAD_COLOR)
 
     # hand 1
     # --------
@@ -226,12 +226,6 @@ def playground_2_embed_singeline_between_fingers():
     img2gray = cv2.cvtColor(hand_1, cv2.COLOR_BGR2GRAY)
     ret, mask = cv2.threshold(img2gray, 10, 255, cv2.THRESH_BINARY)
     mask_inv = cv2.bitwise_not(mask)
-
-    # # Now black-out the area of logo in ROI
-    # img1_bg = cv2.bitwise_and(roi,roi,mask = mask_inv)
-    #
-    # # Take only region of logo from logo image.
-    # img2_fg = cv2.bitwise_and(img2,img2,mask = mask)
 
     if display > 1:
         cv2.imshow('hand_1', hand_1)
@@ -251,8 +245,8 @@ def playground_2_embed_singeline_between_fingers():
     hand_1_fg = cv2.bitwise_and(roi, roi, mask=mask)
 
     # dst = cv2.add(out_img, hand_1_fg)
-    r, c = np.where(mask==(255))
     dst1 = out_img.copy()
+    r, c = np.where(mask==(255))
     dst1[r, c, :] = hand_1_fg[r, c, :]
 
     if display > 1:
@@ -262,10 +256,11 @@ def playground_2_embed_singeline_between_fingers():
 
     # img
     # --------
-    img = resize_by_larger_dim(img, w_ref=200, h_ref=200, display=display>3)
+    img = resize_by_larger_dim(img_orig, w_ref=200, h_ref=200, display=display>3)
     img = inverse_img(img, display=False)
     img2gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-    ret, mask = cv2.threshold(img2gray, 10, 255, cv2.THRESH_BINARY)
+    ret, mask = cv2.threshold(img2gray, 127, 255, cv2.THRESH_BINARY)
+    img = inverse_img(img, display=False)
 
     if display > 1:
         cv2.imshow('img', img)
@@ -277,7 +272,7 @@ def playground_2_embed_singeline_between_fingers():
 
     # black-out the area of logo in ROI
     rows, cols, channels = img.shape
-    roi = hand_2[0:rows, 0:cols ]
+    roi = img[0:rows, 0:cols ]
     img_fg = cv2.bitwise_and(roi, roi, mask=mask)
     # img_fg = inverse_img(img_fg)
 
@@ -285,14 +280,16 @@ def playground_2_embed_singeline_between_fingers():
     r, c = np.where(mask==(255))
     dst2 = dst1.copy()
     left = 250
-    top = 30
-    dst2[r + top, c + left, :] = img_fg[r, c, :]
+    top = 55
+    r_out = np.clip(r + top, a_min=0, a_max=dst2.shape[0]-1)
+    c_out = np.clip(c + left, a_min=0, a_max=dst2.shape[1]-1)
+    dst2[r_out, c_out, :] = img_fg[r, c, :]
 
     if display > 1:
+        cv2.imshow('img_fg', img_fg)
         cv2.imshow('dst2', dst2)
         cv2.waitKey(0)
         cv2.destroyAllWindows()
-
 
     # hand 2
     # --------
@@ -315,7 +312,11 @@ def playground_2_embed_singeline_between_fingers():
     # dst2 = cv2.add(dst, hand_2_fg)
     r, c = np.where(mask==(255))
     dst3 = dst2.copy()
-    dst3[r, c, :] = hand_2_fg[r, c, :]
+    left = 0
+    top = 25
+    r_out = np.clip(r + top, a_min=0, a_max=dst3.shape[0]-1)
+    c_out = np.clip(c + left, a_min=0, a_max=dst3.shape[1]-1)
+    dst3[r_out, c_out, :] = hand_2_fg[r, c, :]
 
     if display > 1:
         cv2.imshow('dst3', dst3)
@@ -323,7 +324,7 @@ def playground_2_embed_singeline_between_fingers():
         cv2.destroyAllWindows()
 
 
-    output_subdir = '4_hand_baseline'
+    output_subdir = '5_hand_improvement_1'
     output_dir = Path(img_file).parent / 'output' / output_subdir
     output_dir.mkdir(exist_ok=True, parents=True)
     output_file_name = '{}_between_hands.png'.format(Path(img_file).stem)
