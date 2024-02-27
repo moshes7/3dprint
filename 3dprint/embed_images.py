@@ -254,12 +254,28 @@ def playground_2_embed_singeline_between_fingers():
         cv2.waitKey(0)
         cv2.destroyAllWindows()
 
+    # add shadow to img, inverse images for combining them properly
+    blur_amount = 32
+    img_orig_inverse = inverse_img(img_orig)
+    img_blurred_inverse = cv2.blur(img_orig_inverse, (blur_amount, blur_amount))
+    img_with_shadow_inverse = cv2.bitwise_or(img_orig_inverse, img_blurred_inverse)
+    img_with_shadow = inverse_img(img_with_shadow_inverse)
+
+    if display > 1:
+        cv2.imshow('img_orig', img_orig)
+        cv2.imshow('img_orig_inverse', img_orig_inverse)
+        cv2.imshow('img_blurred_inverse', img_blurred_inverse)
+        cv2.imshow('img_with_shadow_inverse', img_with_shadow_inverse)
+        cv2.imshow('img_with_shadow', img_with_shadow)
+        cv2.waitKey(0)
+        cv2.destroyAllWindows()
+
     # img
     # --------
-    img = resize_by_larger_dim(img_orig, w_ref=200, h_ref=200, display=display>3)
+    img = resize_by_larger_dim(img_with_shadow, w_ref=200, h_ref=200, display=display>3)
     img = inverse_img(img, display=False)
     img2gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-    ret, mask = cv2.threshold(img2gray, 127, 255, cv2.THRESH_BINARY)
+    ret, mask = cv2.threshold(img2gray, 10, 255, cv2.THRESH_BINARY)
     img = inverse_img(img, display=False)
 
     if display > 1:
@@ -324,7 +340,7 @@ def playground_2_embed_singeline_between_fingers():
         cv2.destroyAllWindows()
 
 
-    output_subdir = '5_hand_improvement_1'
+    output_subdir = '6_hand_with_shadow'
     output_dir = Path(img_file).parent / 'output' / output_subdir
     output_dir.mkdir(exist_ok=True, parents=True)
     output_file_name = '{}_between_hands.png'.format(Path(img_file).stem)
