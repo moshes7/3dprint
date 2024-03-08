@@ -4,27 +4,23 @@ from pathlib import Path
 
 
 def resize(image, width=None, height=None, inter=cv2.INTER_AREA):
-    # initialize the dimensions of the image to be resized and
-    # grab the image size
+    # initialize the dimensions of the image to be resized and grab the image size
     dim = None
     (h, w) = image.shape[:2]
 
-    # if both the width and height are None, then return the
-    # original image
+    # if both the width and height are None, then return the original image
     if width is None and height is None:
         return image
 
     # check to see if the width is None
     if width is None:
-        # calculate the ratio of the height and construct the
-        # dimensions
+        # calculate the ratio of the height and construct the dimensions
         r = height / float(h)
         dim = (int(w * r), height)
 
     # otherwise, the height is None
     else:
-        # calculate the ratio of the width and construct the
-        # dimensions
+        # calculate the ratio of the width and construct the dimensions
         r = width / float(w)
         dim = (width, int(h * r))
 
@@ -54,6 +50,7 @@ def resize_by_larger_dim(img, w_ref=1024, h_ref=1024, display=False):
         cv2.imshow('Input', img)
         cv2.imshow('Resized', img_resized)
         cv2.waitKey(0)
+        cv2.destroyAllWindows()
 
     return img_resized
 
@@ -67,6 +64,7 @@ def transparent_background(img, display=False):
     if display:
         cv2.imshow('transparent', result)
         cv2.waitKey(0)
+        cv2.destroyAllWindows()
 
     return result
 
@@ -78,6 +76,7 @@ def inverse_img(img, display=False):
     if display:
         cv2.imshow('inverse', inverse)
         cv2.waitKey(0)
+        cv2.destroyAllWindows()
 
     return inverse
 
@@ -211,8 +210,8 @@ def playground_2_embed_singeline_between_fingers():
     hand_1_file = 'C:/Users/Moshe/Sync/Projects/3d_printing/images/backgrounds/hand_1.png'
     hand_2_file = 'C:/Users/Moshe/Sync/Projects/3d_printing/images/backgrounds/hand_2.png'
     img_file = 'C:/Users/Moshe/Sync/Projects/3d_printing/images/backgrounds/rabbit.jpeg'
-    # img_file = 'C:/Users/Moshe/Sync/Projects/3d_printing/images/backgrounds/princess_and_butterfly.png'
-    # img_file = 'C:/Users/Moshe/Sync/Projects/3d_printing/images/backgrounds/teddy_bear.jpeg'
+    img_file = 'C:/Users/Moshe/Sync/Projects/3d_printing/images/backgrounds/princess_and_butterfly.png'
+    img_file = 'C:/Users/Moshe/Sync/Projects/3d_printing/images/backgrounds/teddy_bear.jpeg'
 
     display = 1
 
@@ -340,7 +339,7 @@ def playground_2_embed_singeline_between_fingers():
         cv2.destroyAllWindows()
 
 
-    output_subdir = '6_hand_with_shadow'
+    output_subdir = '6_hand_with_shadow_large_white_margins'
     output_dir = Path(img_file).parent / 'output' / output_subdir
     output_dir.mkdir(exist_ok=True, parents=True)
     output_file_name = '{}_between_hands.png'.format(Path(img_file).stem)
@@ -350,10 +349,117 @@ def playground_2_embed_singeline_between_fingers():
     pass
 
 
+def playground_3_embed_singleline_between_fingers():
+
+    # hand_1_file = 'C:/Users/Moshe/Sync/Projects/3d_printing/images/backgrounds/hand_1.png'
+    # hand_2_file = 'C:/Users/Moshe/Sync/Projects/3d_printing/images/backgrounds/hand_2.png'
+    hand_1_file = 'C:/Users/Moshe/Sync/Projects/3d_printing/images/backgrounds/hand_bottom_left_1.png'
+    hand_2_file = 'C:/Users/Moshe/Sync/Projects/3d_printing/images/backgrounds/hand_bottom_left_2.png'
+
+    # img_file = 'C:/Users/Moshe/Sync/Projects/3d_printing/images/backgrounds/rabbit.jpeg'
+    # img_file = 'C:/Users/Moshe/Sync/Projects/3d_printing/images/backgrounds/princess_and_butterfly.png'
+    # img_file = 'C:/Users/Moshe/Sync/Projects/3d_printing/images/backgrounds/teddy_bear.jpeg'
+    img_file = 'C:/Users/Moshe/Sync/Projects/3d_printing/images/backgrounds/mother_and_child.jpeg'
+
+    # parameters
+    display = 1
+    blur_amount = 32
+    th_gray = 150
+
+    hand_1 = cv2.imread(hand_1_file, cv2.IMREAD_COLOR)
+    hand_2 = cv2.imread(hand_2_file, cv2.IMREAD_COLOR)
+    singleline_orig = cv2.imread(img_file, cv2.IMREAD_COLOR)
+
+    # set background image
+    bg_shape = (640, 640, 3)
+    bg = np.zeros(bg_shape, dtype=np.uint8)
+    bg.fill(255)  # white background
+
+    # draw single-line shadow
+    shadow = generate_shadow(singleline_orig, blur_amount=blur_amount, display=display>1)
+    top_left_shadow = (160, 150)
+    resize_shadow = (300, 300)
+    img_with_shadow = add_images(bg=bg, fg=shadow, fg_resize=resize_shadow, top_left=top_left_shadow, inverse_fg=True, display=display>1)
+
+    # add foreground of hand 1
+    top = img_with_shadow.shape[0] - hand_1.shape[0]
+    left = -80
+    img_with_hand_1 = add_images(bg=img_with_shadow, fg=hand_1, fg_resize=None, top_left=(top, left), inverse_fg=False, display=display>1)
+
+    # add single-line
+    shift_shadow = 0
+    top_left_singleline = (top_left_shadow[0] - shift_shadow, top_left_shadow[1] - shift_shadow)
+    img_with_singleline = add_images(bg=img_with_hand_1, fg=singleline_orig, fg_resize=resize_shadow, top_left=top_left_singleline,
+                                     inverse_fg=True, th_gray=th_gray, display=display>1)
+
+    # add foreground of hand 2
+    top = img_with_singleline.shape[0] - hand_2.shape[0]
+    left = -80
+    img_with_hand_2 = add_images(bg=img_with_singleline, fg=hand_2, fg_resize=None, top_left=(top, left), inverse_fg=False, display=display>1)
+
+    out_img = img_with_hand_2
+
+    output_subdir = '7_hand_with_imroved_shadow'
+    output_dir = Path(img_file).parent / 'output' / output_subdir
+    output_dir.mkdir(exist_ok=True, parents=True)
+    output_file_name = '{}_between_hands.png'.format(Path(img_file).stem)
+    output_file = output_dir / output_file_name
+    cv2.imwrite(output_file.as_posix(), out_img)
+
+    pass
+
+
+def generate_shadow(img, blur_amount=48, display=False):
+
+    shadow = cv2.blur(img, (blur_amount, blur_amount))
+
+    if display:
+        cv2.imshow('img', img)
+        cv2.imshow('shadow', shadow)
+        cv2.waitKey(0)
+        cv2.destroyAllWindows()
+
+    return shadow
+
+def add_images(bg, fg, fg_resize=None, top_left=(0, 0), inverse_fg=False, th_gray=10, display=False):
+
+    # resize
+    fg = resize_by_larger_dim(fg, w_ref=fg_resize[0], h_ref=fg_resize[1], display=False) if fg_resize is not None else fg
+
+    # get foreground mask
+    gray = cv2.cvtColor(fg, cv2.COLOR_BGR2GRAY)
+    gray = inverse_img(gray) if inverse_fg else gray
+    ret, mask = cv2.threshold(gray, th_gray, 255, cv2.THRESH_BINARY)
+
+    # extract foreground using mask
+    fg_masked = cv2.bitwise_and(fg, fg, mask)
+
+    # add images
+    out = bg.copy()
+    r, c = np.where(mask == 255)
+    top = top_left[0]
+    left = top_left[1]
+    r_out = np.clip(r + top, a_min=0, a_max=out.shape[0]-1)
+    c_out = np.clip(c + left, a_min=0, a_max=out.shape[1]-1)
+    out[r_out, c_out, :] = fg_masked[r, c, :]
+
+    if display:
+        # cv2.imshow('bg', bg)
+        # cv2.imshow('gray', gray)
+        # cv2.imshow('fg', fg)
+        # cv2.imshow('mask', mask)
+        cv2.imshow('fg_masked', fg_masked)
+        cv2.imshow('out', out)
+        cv2.waitKey(0)
+        cv2.destroyAllWindows()
+
+    return out
+
 if __name__ == '__main__':
 
     # example_embed_single_line_on_background()
     # playground_embed_singeline_between_fingers()
-    playground_2_embed_singeline_between_fingers()
+    # playground_2_embed_singeline_between_fingers()
+    playground_3_embed_singleline_between_fingers()
 
     pass
