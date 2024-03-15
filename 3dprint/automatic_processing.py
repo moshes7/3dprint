@@ -173,14 +173,26 @@ def close_img(img, se_size=5, display=False):
 def dilate_img(img, se_size=5, display=False):
 
     se = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (se_size, se_size))
-    closed = cv2.morphologyEx(img, cv2.MORPH_DILATE  , se)
+    dilated = cv2.morphologyEx(img, cv2.MORPH_DILATE, se)
 
     if display:
         cv2.imshow('original', img)
-        cv2.imshow('dilated', closed)
+        cv2.imshow('dilated', dilated)
         cv2.waitKey(0)
 
-    return closed
+    return dilated
+
+def erode_img(img, se_size=5, display=False):
+
+    se = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (se_size, se_size))
+    eroded = cv2.morphologyEx(img, cv2.MORPH_ERODE, se)
+
+    if display:
+        cv2.imshow('original', img)
+        cv2.imshow('eroded', eroded)
+        cv2.waitKey(0)
+
+    return eroded
 
 def process_img(img_file, thick_type='dilate_closing', se_size=5, se_size_closing=15, display=0):
 

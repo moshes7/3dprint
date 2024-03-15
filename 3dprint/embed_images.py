@@ -68,6 +68,19 @@ def transparent_background(img, display=False):
 
     return result
 
+def erode_img(img, se_size=5, display=False):
+
+    se = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (se_size, se_size))
+    eroded = cv2.morphologyEx(img, cv2.MORPH_ERODE, se)
+
+    if display:
+        cv2.imshow('original', img)
+        cv2.imshow('eroded', eroded)
+        cv2.waitKey(0)
+        cv2.destroyAllWindows()
+
+    return eroded
+
 
 def inverse_img(img, display=False):
 
@@ -93,9 +106,9 @@ def embed_single_line_on_background(img_file, background_file,
     img = resize_by_larger_dim(img_orig, w_ref=size_wh_wanted[0], h_ref=size_wh_wanted[1], display=display>3)
 
     # remove img background
-    img = inverse_img(img, display=display>1)
-    img = transparent_background(img, display>1)
-    img = inverse_img(img, display=display>1)
+    img = inverse_img(img, display=display>0)
+    img = transparent_background(img, display>0)
+    img = inverse_img(img, display=display>0)
     img = cv2.cvtColor(img, cv2.COLOR_BGRA2GRAY)
 
     # embed img on cropped background
@@ -361,8 +374,10 @@ def playground_3_embed_singleline_between_fingers():
     # img_file = 'C:/Users/Moshe/Sync/Projects/3d_printing/images/backgrounds/teddy_bear.jpeg'
     img_file = 'C:/Users/Moshe/Sync/Projects/3d_printing/images/backgrounds/mother_and_child.jpeg'
 
+    output_subdir = '9_with_hand_shadow'
+
     # parameters
-    display = 1
+    display = 0
     blur_amount = 32
     th_gray = 150
 
@@ -371,35 +386,49 @@ def playground_3_embed_singleline_between_fingers():
     singleline_orig = cv2.imread(img_file, cv2.IMREAD_COLOR)
 
     # set background image
-    bg_shape = (640, 640, 3)
+    bg_shape = (1600, 1200, 3)
     bg = np.zeros(bg_shape, dtype=np.uint8)
     bg.fill(255)  # white background
 
     # draw single-line shadow
-    shadow = generate_shadow(singleline_orig, blur_amount=blur_amount, display=display>1)
-    top_left_shadow = (160, 150)
-    resize_shadow = (300, 300)
-    img_with_shadow = add_images(bg=bg, fg=shadow, fg_resize=resize_shadow, top_left=top_left_shadow, inverse_fg=True, display=display>1)
+    shadow_singleline = generate_shadow(singleline_orig, blur_amount=blur_amount, display=display>0)
+    top_left_shadow_1 = (280, -50)
+    resize_shadow_1 = (1200, 1200)
+    img_with_shadow_1 = add_images(bg=bg, fg=shadow_singleline, fg_resize=resize_shadow_1, top_left=top_left_shadow_1, inverse_fg=True, display=display>0)
+
+    # erode hands images - to delete white margins
+    hand_1 = erode_img(hand_1, display=display>0)
+    hand_2 = erode_img(hand_2, display=display>0)
+
+    # draw hand 1 shadow
+    blur_amount_2 = blur_amount
+    shadow_hand = generate_shadow(hand_1, blur_amount=blur_amount_2, generate_mask=True, display=display>0)
+    top = img_with_shadow_1.shape[0] - hand_1.shape[0]
+    left = -80
+    top_left_shadow_2 = (top, left)
+    # resize_shadow_2 = None  #(1200, 1200)
+    img_with_shadow_2 = add_shadows(img_with_shadow_1, shadow_hand, top_left=top_left_shadow_2, th_gray=10, display=display>0)
 
     # add foreground of hand 1
-    top = img_with_shadow.shape[0] - hand_1.shape[0]
+    top = img_with_shadow_2.shape[0] - hand_1.shape[0]
     left = -80
-    img_with_hand_1 = add_images(bg=img_with_shadow, fg=hand_1, fg_resize=None, top_left=(top, left), inverse_fg=False, display=display>1)
+    shift_shadow_hand = -10
+    top_left_hand_1 = (top_left_shadow_2[0] - shift_shadow_hand, top_left_shadow_2[1] - shift_shadow_hand)
+    img_with_hand_1 = add_images(bg=img_with_shadow_2, fg=hand_1, fg_resize=None, top_left=top_left_hand_1, inverse_fg=False, display=display>0)
 
     # add single-line
-    shift_shadow = 0
-    top_left_singleline = (top_left_shadow[0] - shift_shadow, top_left_shadow[1] - shift_shadow)
-    img_with_singleline = add_images(bg=img_with_hand_1, fg=singleline_orig, fg_resize=resize_shadow, top_left=top_left_singleline,
-                                     inverse_fg=True, th_gray=th_gray, display=display>1)
+    shift_shadow = -30
+    top_left_singleline = (top_left_shadow_1[0] - shift_shadow, top_left_shadow_1[1] - shift_shadow)
+    img_with_singleline = add_images(bg=img_with_hand_1, fg=singleline_orig, fg_resize=resize_shadow_1, top_left=top_left_singleline,
+                                     inverse_fg=True, th_gray=th_gray, display=display>0)
 
     # add foreground of hand 2
     top = img_with_singleline.shape[0] - hand_2.shape[0]
     left = -80
-    img_with_hand_2 = add_images(bg=img_with_singleline, fg=hand_2, fg_resize=None, top_left=(top, left), inverse_fg=False, display=display>1)
+    img_with_hand_2 = add_images(bg=img_with_singleline, fg=hand_2, fg_resize=None, top_left=(top, left), inverse_fg=False, display=display>0)
 
     out_img = img_with_hand_2
 
-    output_subdir = '7_hand_with_imroved_shadow'
     output_dir = Path(img_file).parent / 'output' / output_subdir
     output_dir.mkdir(exist_ok=True, parents=True)
     output_file_name = '{}_between_hands.png'.format(Path(img_file).stem)
@@ -409,17 +438,62 @@ def playground_3_embed_singleline_between_fingers():
     pass
 
 
-def generate_shadow(img, blur_amount=48, display=False):
+def generate_shadow(img, blur_amount=48, generate_mask=False, display=False):
+
+    if generate_mask:
+        # inverse_fg = True
+        th_gray = 10
+        gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+        # gray = inverse_img(gray) if inverse_fg else gray
+        ret, mask = cv2.threshold(gray, th_gray, 255, cv2.THRESH_BINARY)
+        mask_inverse = inverse_img(mask)
+        img = cv2.cvtColor(mask_inverse, cv2.COLOR_GRAY2BGR)
 
     shadow = cv2.blur(img, (blur_amount, blur_amount))
 
     if display:
+        if generate_mask:
+            cv2.imshow('gray', gray)
+            cv2.imshow('mask', mask)
+            cv2.imshow('mask_inverse', mask_inverse)
         cv2.imshow('img', img)
         cv2.imshow('shadow', shadow)
         cv2.waitKey(0)
         cv2.destroyAllWindows()
 
     return shadow
+
+def add_shadows(shadow_1, shadow_2, top_left=(0, 0), th_gray=150, display=False):
+
+    # inverse
+    shadow_1 = inverse_img(shadow_1)
+    shadow_2 = inverse_img(shadow_2)
+
+    shadow_2 = erode_img(shadow_2)
+
+    ret, mask = cv2.threshold(shadow_2, th_gray, 255, cv2.THRESH_BINARY)
+
+    out_inverse = shadow_1.copy()
+    r, c = np.where(mask == 255)[:2]
+    top = top_left[0]
+    left = top_left[1]
+    r_out = np.clip(r + top, a_min=0, a_max=out_inverse.shape[0]-1)
+    c_out = np.clip(c + left, a_min=0, a_max=out_inverse.shape[1]-1)
+    # out_inverse[r_out, c_out, :] = cv2.bitwise_or(out_inverse[r_out, c_out, :], shadow_2[r, c, :])
+    out_inverse[r_out, c_out, :] = np.maximum(out_inverse[r_out, c_out, :], shadow_2[r, c, :])
+
+    out = inverse_img(out_inverse)
+
+    if display:
+        cv2.imshow('shadow_1', shadow_1)
+        cv2.imshow('shadow_2', shadow_2)
+        cv2.imshow('mask', mask)
+        cv2.imshow('out_inverse', out_inverse)
+        cv2.imshow('out', out)
+        cv2.waitKey(0)
+        cv2.destroyAllWindows()
+
+    return out
 
 def add_images(bg, fg, fg_resize=None, top_left=(0, 0), inverse_fg=False, th_gray=10, display=False):
 
@@ -444,8 +518,8 @@ def add_images(bg, fg, fg_resize=None, top_left=(0, 0), inverse_fg=False, th_gra
     out[r_out, c_out, :] = fg_masked[r, c, :]
 
     if display:
-        # cv2.imshow('bg', bg)
-        # cv2.imshow('gray', gray)
+        cv2.imshow('bg', bg)
+        cv2.imshow('gray', gray)
         # cv2.imshow('fg', fg)
         # cv2.imshow('mask', mask)
         cv2.imshow('fg_masked', fg_masked)
