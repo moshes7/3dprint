@@ -369,12 +369,12 @@ def playground_3_embed_singleline_between_fingers():
     hand_1_file = 'C:/Users/Moshe/Sync/Projects/3d_printing/images/backgrounds/hand_bottom_left_1.png'
     hand_2_file = 'C:/Users/Moshe/Sync/Projects/3d_printing/images/backgrounds/hand_bottom_left_2.png'
 
-    # img_file = 'C:/Users/Moshe/Sync/Projects/3d_printing/images/backgrounds/rabbit.jpeg'
+    img_file = 'C:/Users/Moshe/Sync/Projects/3d_printing/images/backgrounds/rabbit.jpeg'
     # img_file = 'C:/Users/Moshe/Sync/Projects/3d_printing/images/backgrounds/princess_and_butterfly.png'
     # img_file = 'C:/Users/Moshe/Sync/Projects/3d_printing/images/backgrounds/teddy_bear.jpeg'
-    img_file = 'C:/Users/Moshe/Sync/Projects/3d_printing/images/backgrounds/mother_and_child.jpeg'
+    # img_file = 'C:/Users/Moshe/Sync/Projects/3d_printing/images/backgrounds/mother_and_child.jpeg'
 
-    output_subdir = '9_with_hand_shadow'
+    output_subdir = '10_with_shadow_average'
 
     # parameters
     display = 0
@@ -407,12 +407,10 @@ def playground_3_embed_singleline_between_fingers():
     left = -80
     top_left_shadow_2 = (top, left)
     # resize_shadow_2 = None  #(1200, 1200)
-    img_with_shadow_2 = add_shadows(img_with_shadow_1, shadow_hand, top_left=top_left_shadow_2, th_gray=10, display=display>0)
+    img_with_shadow_2 = add_shadows(img_with_shadow_1, shadow_hand, top_left=top_left_shadow_2, th_gray=10, addition_type='maximum', display=display>0)
 
     # add foreground of hand 1
-    top = img_with_shadow_2.shape[0] - hand_1.shape[0]
-    left = -80
-    shift_shadow_hand = -10
+    shift_shadow_hand = -5
     top_left_hand_1 = (top_left_shadow_2[0] - shift_shadow_hand, top_left_shadow_2[1] - shift_shadow_hand)
     img_with_hand_1 = add_images(bg=img_with_shadow_2, fg=hand_1, fg_resize=None, top_left=top_left_hand_1, inverse_fg=False, display=display>0)
 
@@ -463,7 +461,7 @@ def generate_shadow(img, blur_amount=48, generate_mask=False, display=False):
 
     return shadow
 
-def add_shadows(shadow_1, shadow_2, top_left=(0, 0), th_gray=150, display=False):
+def add_shadows(shadow_1, shadow_2, top_left=(0, 0), th_gray=150, addition_type='maximum', display=False):
 
     # inverse
     shadow_1 = inverse_img(shadow_1)
@@ -479,8 +477,12 @@ def add_shadows(shadow_1, shadow_2, top_left=(0, 0), th_gray=150, display=False)
     left = top_left[1]
     r_out = np.clip(r + top, a_min=0, a_max=out_inverse.shape[0]-1)
     c_out = np.clip(c + left, a_min=0, a_max=out_inverse.shape[1]-1)
-    # out_inverse[r_out, c_out, :] = cv2.bitwise_or(out_inverse[r_out, c_out, :], shadow_2[r, c, :])
-    out_inverse[r_out, c_out, :] = np.maximum(out_inverse[r_out, c_out, :], shadow_2[r, c, :])
+    if addition_type == 'maximum':  # take maximum between shadow_1 and shadow_2
+        # out_inverse[r_out, c_out, :] = cv2.bitwise_or(out_inverse[r_out, c_out, :], shadow_2[r, c, :])
+        out_inverse[r_out, c_out, :] = np.maximum(out_inverse[r_out, c_out, :], shadow_2[r, c, :])
+    elif addition_type == 'masked_addition':  # use shadow_2 values as is where they occur
+        # shadow_2 = cv2.bitwise_and(shadow_2, shadow_2, mask)
+        out_inverse[r_out, c_out, :] = shadow_2[r, c, :]
 
     out = inverse_img(out_inverse)
 
