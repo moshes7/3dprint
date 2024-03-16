@@ -531,11 +531,71 @@ def add_images(bg, fg, fg_resize=None, top_left=(0, 0), inverse_fg=False, th_gra
 
     return out
 
+def find_singleline_bottom_left():
+
+    # img_file = 'C:/Users/Moshe/Sync/Projects/3d_printing/images/backgrounds/rabbit.jpeg'
+    # img_file = 'C:/Users/Moshe/Sync/Projects/3d_printing/images/backgrounds/princess_and_butterfly.png'
+    # img_file = 'C:/Users/Moshe/Sync/Projects/3d_printing/images/backgrounds/teddy_bear.jpeg'
+    img_file = 'C:/Users/Moshe/Sync/Projects/3d_printing/images/backgrounds/mother_and_child.jpeg'
+
+    display = True
+
+    singleline_orig = cv2.imread(img_file, cv2.IMREAD_COLOR)
+    fg = singleline_orig
+
+    fg_resize = (1200, 1200)
+    fg = resize_by_larger_dim(fg, w_ref=fg_resize[0], h_ref=fg_resize[1], display=False) if fg_resize is not None else fg
+
+    # get foreground mask
+    inverse_fg = True
+    th_gray = 10
+    gray = cv2.cvtColor(fg, cv2.COLOR_BGR2GRAY)
+    gray = inverse_img(gray) if inverse_fg else gray
+    ret, mask = cv2.threshold(gray, th_gray, 255, cv2.THRESH_BINARY)
+
+    # extract foreground using mask
+    fg_masked = cv2.bitwise_and(fg, fg, mask)
+
+    bottom_inds = last_nonzero(mask, axis=0, invalid_val=-1)
+    bottom_inds_non_zero = np.where(bottom_inds > 0)[0]
+    bottom_inds = bottom_inds[bottom_inds_non_zero]
+    width = bottom_inds_non_zero.max() - bottom_inds_non_zero.min()
+    bottom_ind = int(0.1 * width)  # take point 10% inside the single-line
+    bottom = bottom_inds[bottom_ind]
+    left = bottom_inds_non_zero[bottom_ind]
+
+    fg_with_circle = cv2.circle(fg, (left, bottom), 10, (0, 0, 255), -1)
+
+    if display:
+        cv2.imshow('fg_with_circle', fg_with_circle)
+        cv2.waitKey(0)
+        cv2.destroyAllWindows()
+
+    pass
+
+"""
+Next 2 function were taken from:
+https://stackoverflow.com/questions/66440022/get-non-zero-roi-from-numpy-array  # last answer
+https://stackoverflow.com/questions/47269390/how-to-find-first-non-zero-value-in-every-column-of-a-numpy-array
+"""
+def first_nonzero(arr, axis, invalid_val=-1):
+    mask = arr!=0
+    ind = np.where(mask.any(axis=axis), mask.argmax(axis=axis), invalid_val)
+    return ind
+
+def last_nonzero(arr, axis, invalid_val=-1):
+    mask = arr != 0
+    val = arr.shape[axis] - np.flip(mask, axis=axis).argmax(axis=axis) - 1
+    ind = np.where(mask.any(axis=axis), val, invalid_val)
+    return ind
+
 if __name__ == '__main__':
 
     # example_embed_single_line_on_background()
     # playground_embed_singeline_between_fingers()
     # playground_2_embed_singeline_between_fingers()
-    playground_3_embed_singleline_between_fingers()
+    # playground_3_embed_singleline_between_fingers()
+    find_singleline_bottom_left()
+
 
     pass
