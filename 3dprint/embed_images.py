@@ -374,7 +374,7 @@ def playground_3_embed_singleline_between_fingers():
     # img_file = 'C:/Users/Moshe/Sync/Projects/3d_printing/images/backgrounds/teddy_bear.jpeg'
     img_file = 'C:/Users/Moshe/Sync/Projects/3d_printing/images/backgrounds/mother_and_child.jpeg'
 
-    output_subdir = '10_with_singleline_bottom_left'
+    output_subdir = '11_shadow_bottom_right'
 
     # parameters
     display = 0
@@ -407,7 +407,7 @@ def playground_3_embed_singleline_between_fingers():
 
     # draw single-line shadow
     shadow_singleline = generate_shadow(singleline, blur_amount=blur_amount, display=display>0)
-    shadow_shift = 10
+    shadow_shift = -25
     top_left_singleline_shadow = (top_left_singleline[0] - shadow_shift, top_left_singleline[1] - shadow_shift)
     img_with_shadow_1 = add_images(bg=bg, fg=shadow_singleline, fg_resize=None, top_left=top_left_singleline_shadow, inverse_fg=True, display=display>0)
 
@@ -418,7 +418,7 @@ def playground_3_embed_singleline_between_fingers():
     # draw hand 1 shadow
     blur_amount_2 = blur_amount
     shadow_hand = generate_shadow(hand_1, blur_amount=blur_amount_2, generate_mask=True, display=display>0)
-    # shadow_shift = 5
+    shadow_shift = -10
     top_left_hand_shadow = (top_left_hand[0] - shadow_shift, top_left_hand[1] - shadow_shift)
     img_with_shadow_2 = add_shadows(img_with_shadow_1, shadow_hand, top_left=top_left_hand_shadow, th_gray=10, addition_type='maximum', display=display>0)
 
