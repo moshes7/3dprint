@@ -371,8 +371,8 @@ def playground_3_embed_singleline_between_fingers():
 
     # img_file = 'C:/Users/Moshe/Sync/Projects/3d_printing/images/backgrounds/rabbit.jpeg'
     # img_file = 'C:/Users/Moshe/Sync/Projects/3d_printing/images/backgrounds/princess_and_butterfly.png'
-    img_file = 'C:/Users/Moshe/Sync/Projects/3d_printing/images/backgrounds/teddy_bear.jpeg'
-    # img_file = 'C:/Users/Moshe/Sync/Projects/3d_printing/images/backgrounds/mother_and_child.jpeg'
+    # img_file = 'C:/Users/Moshe/Sync/Projects/3d_printing/images/backgrounds/teddy_bear.jpeg'
+    img_file = 'C:/Users/Moshe/Sync/Projects/3d_printing/images/backgrounds/mother_and_child.jpeg'
 
     output_subdir = '10_with_singleline_bottom_left'
 
@@ -393,11 +393,23 @@ def playground_3_embed_singleline_between_fingers():
     bg = np.zeros(bg_shape, dtype=np.uint8)
     bg.fill(255)  # white background
 
+    # set top-left position of different objects
+    top = bg.shape[0] - hand_1.shape[0]
+    left = -80
+    top_left_hand = (top, left)
+
+    # get singleline top left position
+    left, bottom = find_singleline_bottom_left(singleline, th_gray=10, inverse=True, display=display>0)
+    thumb_center_xy = (top_left_hand[1] + thumb_center_orig_xy[0], top_left_hand[0] + thumb_center_orig_xy[1])
+    top_singleline = thumb_center_xy[1] - bottom
+    left_singleline = thumb_center_xy[0] - left
+    top_left_singleline = (top_singleline, left_singleline)
+
     # draw single-line shadow
     shadow_singleline = generate_shadow(singleline, blur_amount=blur_amount, display=display>0)
-    top_left_shadow_1 = (280, -50)
-    resize_shadow_1 = None
-    img_with_shadow_1 = add_images(bg=bg, fg=shadow_singleline, fg_resize=resize_shadow_1, top_left=top_left_shadow_1, inverse_fg=True, display=display>0)
+    shadow_shift = 10
+    top_left_singleline_shadow = (top_left_singleline[0] - shadow_shift, top_left_singleline[1] - shadow_shift)
+    img_with_shadow_1 = add_images(bg=bg, fg=shadow_singleline, fg_resize=None, top_left=top_left_singleline_shadow, inverse_fg=True, display=display>0)
 
     # erode hands images - to delete white margins
     hand_1 = erode_img(hand_1, display=display>0)
@@ -406,39 +418,19 @@ def playground_3_embed_singleline_between_fingers():
     # draw hand 1 shadow
     blur_amount_2 = blur_amount
     shadow_hand = generate_shadow(hand_1, blur_amount=blur_amount_2, generate_mask=True, display=display>0)
-    top = img_with_shadow_1.shape[0] - hand_1.shape[0]
-    left = -80
-    top_left_shadow_2 = (top, left)
-    # resize_shadow_2 = None  #(1200, 1200)
-    img_with_shadow_2 = add_shadows(img_with_shadow_1, shadow_hand, top_left=top_left_shadow_2, th_gray=10, addition_type='maximum', display=display>0)
+    # shadow_shift = 5
+    top_left_hand_shadow = (top_left_hand[0] - shadow_shift, top_left_hand[1] - shadow_shift)
+    img_with_shadow_2 = add_shadows(img_with_shadow_1, shadow_hand, top_left=top_left_hand_shadow, th_gray=10, addition_type='maximum', display=display>0)
 
     # add foreground of hand 1
-    shift_shadow_hand = -5
-    top_left_hand_1 = (top_left_shadow_2[0] - shift_shadow_hand, top_left_shadow_2[1] - shift_shadow_hand)
-    img_with_hand_1 = add_images(bg=img_with_shadow_2, fg=hand_1, fg_resize=None, top_left=top_left_hand_1, inverse_fg=False, display=display>0)
+    img_with_hand_1 = add_images(bg=img_with_shadow_2, fg=hand_1, fg_resize=None, top_left=top_left_hand, inverse_fg=False, display=display>0)
 
     # add single-line
-    # shift_shadow = -30
-    # top_left_singleline = (top_left_shadow_1[0] - shift_shadow, top_left_shadow_1[1] - shift_shadow)
-    # TODO: FIXME
-    left, bottom = find_singleline_bottom_left(singleline, th_gray=10, inverse=True, display=display>0)
-    thumb_center_xy = (top_left_hand_1[1] + thumb_center_orig_xy[0], top_left_hand_1[0] + thumb_center_orig_xy[1])
-    top_singleline = thumb_center_xy[1] - bottom
-    # top_singleline = thumb_center_xy[1] - bottom - (resize_shadow_1[0] - bottom)
-    left_singleline = thumb_center_xy[0] - left
-    top_left_singleline = (top_singleline, left_singleline)
-    img_with_singleline = add_images(bg=img_with_hand_1, fg=singleline, fg_resize=resize_shadow_1, top_left=top_left_singleline,
+    img_with_singleline = add_images(bg=img_with_hand_1, fg=singleline, fg_resize=None, top_left=top_left_singleline,
                                      inverse_fg=True, th_gray=th_gray, display=display>0)
 
     # add foreground of hand 2
-    top_left_hand_2 = top_left_hand_1
-    img_with_hand_2 = add_images(bg=img_with_singleline, fg=hand_2, fg_resize=None, top_left=top_left_hand_2, inverse_fg=False, display=display>0)
-
-    # thumb_center_xy = (top_left_hand_2[1] + thumb_center_orig_xy[0], top_left_hand_2[0] + thumb_center_orig_xy[1])
-    # img_with_circle = cv2.circle(img_with_hand_2, thumb_center_xy, 10, (0, 0, 255), -1)
-    # cv2.imshow('img_with_circle', img_with_circle)
-    # cv2.waitKey(0)
-    # cv2.destroyAllWindows()
+    img_with_hand_2 = add_images(bg=img_with_singleline, fg=hand_2, fg_resize=None, top_left=top_left_hand, inverse_fg=False, display=display>0)
 
     out_img = img_with_hand_2
 
