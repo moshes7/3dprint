@@ -531,7 +531,7 @@ def add_images(bg, fg, fg_resize=None, top_left=(0, 0), inverse_fg=False, th_gra
 
     return out
 
-def find_singleline_bottom_left():
+def find_singleline_bottom_left_example():
 
     # img_file = 'C:/Users/Moshe/Sync/Projects/3d_printing/images/backgrounds/rabbit.jpeg'
     # img_file = 'C:/Users/Moshe/Sync/Projects/3d_printing/images/backgrounds/princess_and_butterfly.png'
@@ -546,16 +546,18 @@ def find_singleline_bottom_left():
     fg_resize = (1200, 1200)
     fg = resize_by_larger_dim(fg, w_ref=fg_resize[0], h_ref=fg_resize[1], display=False) if fg_resize is not None else fg
 
+    left, bottom = find_singleline_bottom_left(fg, th_gray=10, inverse=True, display=display)
+
+    pass
+
+def find_singleline_bottom_left(img, th_gray=10, inverse=True, display=False):
+
     # get foreground mask
-    inverse_fg = True
-    th_gray = 10
-    gray = cv2.cvtColor(fg, cv2.COLOR_BGR2GRAY)
-    gray = inverse_img(gray) if inverse_fg else gray
+    gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+    gray = inverse_img(gray) if inverse else gray
     ret, mask = cv2.threshold(gray, th_gray, 255, cv2.THRESH_BINARY)
 
-    # extract foreground using mask
-    fg_masked = cv2.bitwise_and(fg, fg, mask)
-
+    # find bottom left point
     bottom_inds = last_nonzero(mask, axis=0, invalid_val=-1)
     bottom_inds_non_zero = np.where(bottom_inds > 0)[0]
     bottom_inds = bottom_inds[bottom_inds_non_zero]
@@ -564,14 +566,13 @@ def find_singleline_bottom_left():
     bottom = bottom_inds[bottom_ind]
     left = bottom_inds_non_zero[bottom_ind]
 
-    fg_with_circle = cv2.circle(fg, (left, bottom), 10, (0, 0, 255), -1)
-
     if display:
-        cv2.imshow('fg_with_circle', fg_with_circle)
+        img_with_circle = cv2.circle(img, (left, bottom), 10, (0, 0, 255), -1)
+        cv2.imshow('img_with_circle', img_with_circle)
         cv2.waitKey(0)
         cv2.destroyAllWindows()
 
-    pass
+    return left, bottom
 
 """
 Next 2 function were taken from:
@@ -589,13 +590,33 @@ def last_nonzero(arr, axis, invalid_val=-1):
     ind = np.where(mask.any(axis=axis), val, invalid_val)
     return ind
 
+
+def find_thumb_center():
+
+    hand_1_file = 'C:/Users/Moshe/Sync/Projects/3d_printing/images/backgrounds/hand_bottom_left_1.png'
+    hand_2_file = 'C:/Users/Moshe/Sync/Projects/3d_printing/images/backgrounds/hand_bottom_left_2.png'
+    hand_1 = cv2.imread(hand_1_file, cv2.IMREAD_COLOR)
+    hand_2 = cv2.imread(hand_2_file, cv2.IMREAD_COLOR)
+
+    left = 300
+    bottom = 230
+
+    hand_2_with_circle = cv2.circle(hand_2, (left, bottom), 10, (0, 0, 255), -1)
+
+    cv2.imshow('hand_2_with_circle', hand_2_with_circle)
+    cv2.waitKey(0)
+    cv2.destroyAllWindows()
+
+    pass
+
 if __name__ == '__main__':
 
     # example_embed_single_line_on_background()
     # playground_embed_singeline_between_fingers()
     # playground_2_embed_singeline_between_fingers()
     # playground_3_embed_singleline_between_fingers()
-    find_singleline_bottom_left()
+    find_singleline_bottom_left_example()
+    # find_thumb_center()
 
 
     pass
