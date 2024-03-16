@@ -421,9 +421,15 @@ def playground_3_embed_singleline_between_fingers():
                                      inverse_fg=True, th_gray=th_gray, display=display>0)
 
     # add foreground of hand 2
-    top = img_with_singleline.shape[0] - hand_2.shape[0]
-    left = -80
-    img_with_hand_2 = add_images(bg=img_with_singleline, fg=hand_2, fg_resize=None, top_left=(top, left), inverse_fg=False, display=display>0)
+    top_left_hand_2 = top_left_hand_1
+    img_with_hand_2 = add_images(bg=img_with_singleline, fg=hand_2, fg_resize=None, top_left=top_left_hand_2, inverse_fg=False, display=display>0)
+
+    thumb_center_orig_xy = (300, 230)  # in hand_2 coordinates
+    thumb_center_xy = (top_left_hand_2[1] + thumb_center_orig_xy[0], top_left_hand_2[0] + thumb_center_orig_xy[1])
+    img_with_circle = cv2.circle(img_with_hand_2, thumb_center_xy, 10, (0, 0, 255), -1)
+    cv2.imshow('img_with_circle', img_with_circle)
+    cv2.waitKey(0)
+    cv2.destroyAllWindows()
 
     out_img = img_with_hand_2
 
@@ -614,8 +620,8 @@ if __name__ == '__main__':
     # example_embed_single_line_on_background()
     # playground_embed_singeline_between_fingers()
     # playground_2_embed_singeline_between_fingers()
-    # playground_3_embed_singleline_between_fingers()
-    find_singleline_bottom_left_example()
+    playground_3_embed_singleline_between_fingers()
+    # find_singleline_bottom_left_example()
     # find_thumb_center()
 
 
