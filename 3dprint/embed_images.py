@@ -93,61 +93,37 @@ def inverse_img(img, display=False):
 
     return inverse
 
-def embed_single_line_on_background_old(img_file, background_file,
-                                    size_wh_wanted=(1024, 1024), left_top=(1600, 750),
-                                    output_subdir='',
-                                    display=0):
-
-    # read images
-    img_orig = cv2.imread(img_file, 0)
-    bg = cv2.imread(background_file, cv2.IMREAD_COLOR)
-
-    # resize img
-    img = resize_by_larger_dim(img_orig, w_ref=size_wh_wanted[0], h_ref=size_wh_wanted[1], display=display>3)
-
-    # remove img background
-    img = inverse_img(img, display=display>0)
-    img = transparent_background(img, display>0)
-    img = inverse_img(img, display=display>0)
-    img = cv2.cvtColor(img, cv2.COLOR_BGRA2GRAY)
-
-    # embed img on cropped background
-    x_start = left_top[0]
-    x_end = x_start + img.shape[1]
-    y_start = left_top[1]
-    y_end = y_start + img.shape[0]
-    bg_crop = bg[y_start:y_end, x_start:x_end]
-
-    b_channel, g_channel, r_channel = cv2.split(bg_crop)
-    img_on_bg_cropped = cv2.merge((b_channel, g_channel, r_channel, img))
-
-    # put cropped background in full background
-    img_on_bg = cv2.cvtColor(bg, cv2.COLOR_BGR2BGRA)
-    img_on_bg[y_start:y_end, x_start:x_end, ...] = img_on_bg_cropped
-
-    # img_on_bg = cv2.cvtColor(img_on_bg, cv2.COLOR_BGRA2BGR)
-
-    # save result
-    output_dir = Path(img_file).parent / 'output' / output_subdir
-    output_dir.mkdir(exist_ok=True, parents=True)
-    output_file_name = '{}_{}.png'.format(Path(background_file).stem, Path(img_file).stem)
-    output_file = output_dir / output_file_name
-    cv2.imwrite(output_file.as_posix(), img_on_bg)
-
-    if display > 0:
-        cv2.imshow('original', img_orig)
-        cv2.imshow('transparent', img)
-        cv2.imshow('img_on_bg_cropped', img_on_bg_cropped)
-        cv2.imshow('img_on_bg', img_on_bg)
-        cv2.waitKey(0)
-
-    return img_on_bg
-
 
 def embed_single_line_on_background(singleline_img_or_file, background_file,
                                     size_wh_wanted=(1024, 1024), left_top=(1600, 750),
                                     out_file_name=None,
                                     display=0):
+    """
+        Embed single-line image on background image.
+
+        Parameters
+        ----------
+        singleline_img_or_file : ndarray or str
+            Single-line image, may be the image itself, or it's full path.
+        background_file : ndarray or str
+            Single-line image, may be the image itself, or it's full path.
+        size_wh_wanted : tuple, optional
+            Wanted single-line size.
+       left_top : tuple, optional
+            Wanted single-line top-left coordinate.
+        display : int, optional
+            Display flag:
+                - 0: no display
+                - 1: display output image only
+                - 2: display all intermediate images (for debug)
+        out_file_name: str, optional
+            Wanted output file name, saved only if not None.
+
+        Returns
+        -------
+        out_img : ndarray
+            Output image.
+    """
 
     # read images
     bg = cv2.imread(background_file, cv2.IMREAD_COLOR)
@@ -164,36 +140,6 @@ def embed_single_line_on_background(singleline_img_or_file, background_file,
         cv2.imwrite(out_file_name.as_posix(), out_img)
 
     return out_img
-
-# def example_embed_single_line_on_background_old():
-#
-#     img_file_list = [
-#         'C:/Users/Moshe/Sync/Projects/3d_printing/images/backgrounds/rabbit.jpeg',
-#         'C:/Users/Moshe/Sync/Projects/3d_printing/images/backgrounds/teddy_bear.jpeg',
-#         'C:/Users/Moshe/Sync/Projects/3d_printing/images/backgrounds/mother_and_child.jpeg',
-#     ]
-#
-#     background_file_list = [
-#         'C:/Users/Moshe/Sync/Projects/3d_printing/images/backgrounds/background_1.jpg',
-#         'C:/Users/Moshe/Sync/Projects/3d_printing/images/backgrounds/background_2.jpg',
-#         'C:/Users/Moshe/Sync/Projects/3d_printing/images/backgrounds/background_3.jpg',
-#     ]
-#
-#     display = 0
-#     output_subdir = '1_baseline'
-#     # output_subdir = '2_convert_to_bgr'
-#     # output_subdir = '3_jpg'
-#
-#     for img_file in img_file_list:
-#         for background_file in background_file_list:
-#
-#             embed_single_line_on_background(img_file, background_file,
-#                                             size_wh_wanted=(1024, 1024),
-#                                             left_top=(1600, 750),
-#                                             output_subdir=output_subdir,
-#                                             display=display)
-#
-#     pass
 
 
 def embed_singleline_between_fingers(singleline_img_or_file,
