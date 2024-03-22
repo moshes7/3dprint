@@ -93,7 +93,7 @@ def inverse_img(img, display=False):
 
     return inverse
 
-def embed_single_line_on_background(img_file, background_file,
+def embed_single_line_on_background_old(img_file, background_file,
                                     size_wh_wanted=(1024, 1024), left_top=(1600, 750),
                                     output_subdir='',
                                     display=0):
@@ -144,35 +144,56 @@ def embed_single_line_on_background(img_file, background_file,
     return img_on_bg
 
 
-def example_embed_single_line_on_background():
+def embed_single_line_on_background(singleline_img_or_file, background_file,
+                                    size_wh_wanted=(1024, 1024), left_top=(1600, 750),
+                                    out_file_name=None,
+                                    display=0):
 
-    img_file_list = [
-        'C:/Users/Moshe/Sync/Projects/3d_printing/images/backgrounds/rabbit.jpeg',
-        'C:/Users/Moshe/Sync/Projects/3d_printing/images/backgrounds/teddy_bear.jpeg',
-        'C:/Users/Moshe/Sync/Projects/3d_printing/images/backgrounds/mother_and_child.jpeg',
-    ]
+    # read images
+    bg = cv2.imread(background_file, cv2.IMREAD_COLOR)
+    singleline_orig = cv2.imread(singleline_img_or_file, cv2.IMREAD_COLOR) if isinstance(singleline_img_or_file, str) else singleline_img_or_file
+    singleline = resize_by_larger_dim(singleline_orig, w_ref=size_wh_wanted[0], h_ref=size_wh_wanted[1], display=False)
 
-    background_file_list = [
-        'C:/Users/Moshe/Sync/Projects/3d_printing/images/backgrounds/background_1.jpg',
-        'C:/Users/Moshe/Sync/Projects/3d_printing/images/backgrounds/background_2.jpg',
-        'C:/Users/Moshe/Sync/Projects/3d_printing/images/backgrounds/background_3.jpg',
-    ]
+    # embed single-line on background
+    out_img = add_images(bg=bg, fg=singleline, fg_resize=None, top_left=(left_top[1], left_top[0]), inverse_fg=True, display=display>1)
 
-    display = 0
-    output_subdir = '1_baseline'
-    # output_subdir = '2_convert_to_bgr'
-    # output_subdir = '3_jpg'
+    # save output image
+    if out_file_name is not None:
+        out_file_name = Path(out_file_name)
+        Path(out_file_name).parent.mkdir(exist_ok=True, parents=True)
+        cv2.imwrite(out_file_name.as_posix(), out_img)
 
-    for img_file in img_file_list:
-        for background_file in background_file_list:
+    return out_img
 
-            embed_single_line_on_background(img_file, background_file,
-                                            size_wh_wanted=(1024, 1024),
-                                            left_top=(1600, 750),
-                                            output_subdir=output_subdir,
-                                            display=display)
-
-    pass
+# def example_embed_single_line_on_background_old():
+#
+#     img_file_list = [
+#         'C:/Users/Moshe/Sync/Projects/3d_printing/images/backgrounds/rabbit.jpeg',
+#         'C:/Users/Moshe/Sync/Projects/3d_printing/images/backgrounds/teddy_bear.jpeg',
+#         'C:/Users/Moshe/Sync/Projects/3d_printing/images/backgrounds/mother_and_child.jpeg',
+#     ]
+#
+#     background_file_list = [
+#         'C:/Users/Moshe/Sync/Projects/3d_printing/images/backgrounds/background_1.jpg',
+#         'C:/Users/Moshe/Sync/Projects/3d_printing/images/backgrounds/background_2.jpg',
+#         'C:/Users/Moshe/Sync/Projects/3d_printing/images/backgrounds/background_3.jpg',
+#     ]
+#
+#     display = 0
+#     output_subdir = '1_baseline'
+#     # output_subdir = '2_convert_to_bgr'
+#     # output_subdir = '3_jpg'
+#
+#     for img_file in img_file_list:
+#         for background_file in background_file_list:
+#
+#             embed_single_line_on_background(img_file, background_file,
+#                                             size_wh_wanted=(1024, 1024),
+#                                             left_top=(1600, 750),
+#                                             output_subdir=output_subdir,
+#                                             display=display)
+#
+#     pass
 
 
 def embed_singleline_between_fingers(singleline_img_or_file,
@@ -517,12 +538,46 @@ def example_embed_singleline_between_fingres():
     pass
 
 
+def example_embed_single_line_on_background():
+
+    img_file_list = [
+        'C:/Users/Moshe/Sync/Projects/3d_printing/images/backgrounds/rabbit.jpeg',
+        'C:/Users/Moshe/Sync/Projects/3d_printing/images/backgrounds/teddy_bear.jpeg',
+        'C:/Users/Moshe/Sync/Projects/3d_printing/images/backgrounds/mother_and_child.jpeg',
+    ]
+
+    background_file_list = [
+        'C:/Users/Moshe/Sync/Projects/3d_printing/images/backgrounds/background_1.jpg',
+        'C:/Users/Moshe/Sync/Projects/3d_printing/images/backgrounds/background_2.jpg',
+        'C:/Users/Moshe/Sync/Projects/3d_printing/images/backgrounds/background_3.jpg',
+    ]
+
+    display = 1
+
+    output_root_dir = 'C:/Users/Moshe/Sync/Projects/3d_printing/images/backgrounds/output/'
+    output_subdir = '13_improved_img_on_bg'
+
+    for img_file in img_file_list:
+        for background_file in background_file_list:
+
+            out_file = '{}_on_{}.png'.format(Path(img_file).stem, Path(background_file).stem)
+            out_file_name = Path(output_root_dir) / output_subdir / out_file
+
+            embed_single_line_on_background(img_file, background_file,
+                                            size_wh_wanted=(1024, 1024),
+                                            left_top=(1600, 750),
+                                            out_file_name=out_file_name,
+                                            display=display)
+
+    pass
+
+
 if __name__ == '__main__':
 
-    # example_embed_single_line_on_background()
     # find_singleline_bottom_left_example()
     # find_thumb_center()
-    example_embed_singleline_between_fingres()
+    # example_embed_singleline_between_fingres()
+    example_embed_single_line_on_background()
 
 
     pass
