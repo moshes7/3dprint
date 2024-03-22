@@ -177,7 +177,7 @@ def example_embed_single_line_on_background():
 
 def embed_singleline_between_fingers(singleline_img_or_file,
                                      resize_singleline=(750, 750),
-                                     out_img_shape=(1600, 1200, 3),
+                                     out_img_shape=(1000, 1200, 3),
                                      hand_type='bottom_left',
                                      singleline_shadow_shift=-25,
                                      hand_shadow_shift=-10,
@@ -488,9 +488,9 @@ def find_thumb_center():
 
 def example_embed_singleline_between_fingres():
 
-    # singleline_file = 'C:/Users/Moshe/Sync/Projects/3d_printing/images/backgrounds/mother_and_child.jpeg'
+    singleline_file = 'C:/Users/Moshe/Sync/Projects/3d_printing/images/backgrounds/mother_and_child.jpeg'
     # singleline_file = 'C:/Users/Moshe/Sync/Projects/3d_printing/images/backgrounds/rabbit.jpeg'
-    singleline_file = 'C:/Users/Moshe/Sync/Projects/3d_printing/images/backgrounds/princess_and_butterfly.png'
+    # singleline_file = 'C:/Users/Moshe/Sync/Projects/3d_printing/images/backgrounds/princess_and_butterfly.png'
     # singleline_file = 'C:/Users/Moshe/Sync/Projects/3d_printing/images/backgrounds/teddy_bear.jpeg'
 
     hand_type = 'bottom_left'
@@ -504,7 +504,7 @@ def example_embed_singleline_between_fingres():
 
     embed_singleline_between_fingers(singleline_file,
                                      resize_singleline=(750, 750),
-                                     out_img_shape=(1600, 1200, 3),
+                                     out_img_shape=(1000, 1200, 3),
                                      hand_type=hand_type,
                                      singleline_shadow_shift=-25,
                                      hand_shadow_shift=-10,
