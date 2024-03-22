@@ -443,6 +443,126 @@ def playground_3_embed_singleline_between_fingers():
     pass
 
 
+def embed_singleline_between_fingers(singleline_img_or_file,
+                                     resize_singleline=(1000, 1000),
+                                     out_img_shape=(1600, 1200, 3),
+                                     hand_type='bottom_left',
+                                     singleline_shadow_shift=-25,
+                                     hand_shadow_shift=-10,
+                                     blur_amount=32,
+                                     th_gray=150,
+                                     display=0,
+                                     out_file_name=None,
+                                     ):
+    """
+        Embed single-line image between 2 hand images, and add shdows
+
+        Parameters
+        ----------
+        singleline_img_or_file : ndarray or str
+            Single-line image, may be the image itself, or it's full path.
+        resize_singleline : tuple, optional
+            Wanted single-line size.
+        out_img_shape : tuple, optional
+            Output image shape.
+        hand_type : str, optional
+            Hand images type, must be one of {'bottom_left', 'center'}.
+        singleline_shadow_shift : int, optional
+            Single-line shadow shift.
+        hand_shadow_shift : int, optional
+            Hand shadow shift.
+        blur_amount : int, optional
+            Controls the shadow intensity.
+        th_gray : int, optional
+            Threshold to convert grayscale image to binary one.
+        display : int, optional
+            Display flag:
+                - 0: no display
+                - 1: display output image only
+                - 2: display all intermediate images (for debug)
+        out_file_name: str, optional
+            Wanted output file name, saved only if not None.
+
+        Returns
+        -------
+        out_img : ndarray
+            Output image.
+    """
+
+    assert isinstance(singleline_img_or_file, str) or isinstance(singleline_img_or_file, np.array)
+    assert hand_type in ['bottom_left', 'center']
+
+    if hand_type == 'bottom_left':
+        hand_1_file = (Path(__file__).parent / 'images' / 'hand_bottom_left_1.png').as_posix()
+        hand_2_file = (Path(__file__).parent / 'images' / 'hand_bottom_left_2.png').as_posix()
+        thumb_center_orig_xy = (300, 230)  # values for hand_bottom_left_2.png, in original img coordinates
+        hand_shift_top_left = (0, -80)
+    elif hand_type == 'center':
+        # FIXME
+        # hand_1_file = Path(__file__).parent / 'images' / 'hand_bottom_left_1.png'
+        # hand_2_file = Path(__file__).parent / 'images' / 'hand_bottom_left_2.png'
+        # thumb_center_orig_xy=(300, 230)  # values for hand_bottom_left_2.png, in original img coordinates
+        # hand_shift_top_left = (0, -80)
+        pass
+
+    # read images
+    hand_1 = cv2.imread(hand_1_file, cv2.IMREAD_COLOR)
+    hand_2 = cv2.imread(hand_2_file, cv2.IMREAD_COLOR)
+    singleline_orig = cv2.imread(singleline_img_or_file, cv2.IMREAD_COLOR) if isinstance(singleline_img_or_file, str) else singleline_img_or_file
+    singleline = resize_by_larger_dim(singleline_orig, w_ref=resize_singleline[0], h_ref=resize_singleline[1], display=False)
+
+    # set background image
+    bg = np.zeros(out_img_shape, dtype=np.uint8)
+    bg.fill(255)  # white background
+
+    # set top-left position of different objects
+    top = bg.shape[0] - hand_1.shape[0] + hand_shift_top_left[0]
+    left = hand_shift_top_left[1]
+    top_left_hand = (top, left)
+
+    # get singleline top left position
+    left, bottom = find_singleline_bottom_left(singleline, th_gray=10, inverse=True, display=display>1)
+    thumb_center_xy = (top_left_hand[1] + thumb_center_orig_xy[0], top_left_hand[0] + thumb_center_orig_xy[1])
+    top_singleline = thumb_center_xy[1] - bottom
+    left_singleline = thumb_center_xy[0] - left
+    top_left_singleline = (top_singleline, left_singleline)
+
+    # draw single-line shadow
+    shadow_singleline = generate_shadow(singleline, blur_amount=blur_amount, display=display>1)
+    shadow_shift = singleline_shadow_shift
+    top_left_singleline_shadow = (top_left_singleline[0] - shadow_shift, top_left_singleline[1] - shadow_shift)
+    img_with_shadow_1 = add_images(bg=bg, fg=shadow_singleline, fg_resize=None, top_left=top_left_singleline_shadow, inverse_fg=True, display=display>1)
+
+    # erode hands images - to delete white margins
+    hand_1 = erode_img(hand_1, display=display>1)
+    hand_2 = erode_img(hand_2, display=display>1)
+
+    # draw hand 1 shadow
+    blur_amount_2 = blur_amount
+    shadow_hand = generate_shadow(hand_1, blur_amount=blur_amount_2, generate_mask=True, display=display>1)
+    shadow_shift = hand_shadow_shift
+    top_left_hand_shadow = (top_left_hand[0] - shadow_shift, top_left_hand[1] - shadow_shift)
+    img_with_shadow_2 = add_shadows(img_with_shadow_1, shadow_hand, top_left=top_left_hand_shadow, th_gray=10, addition_type='maximum', display=display>1)
+
+    # add foreground of hand 1
+    img_with_hand_1 = add_images(bg=img_with_shadow_2, fg=hand_1, fg_resize=None, top_left=top_left_hand, inverse_fg=False, display=display>1)
+
+    # add single-line
+    img_with_singleline = add_images(bg=img_with_hand_1, fg=singleline, fg_resize=None, top_left=top_left_singleline,
+                                     inverse_fg=True, th_gray=th_gray, display=display>1)
+
+    # add foreground of hand 2
+    img_with_hand_2 = add_images(bg=img_with_singleline, fg=hand_2, fg_resize=None, top_left=top_left_hand, inverse_fg=False, display=display>0)
+
+    out_img = img_with_hand_2
+
+    if out_file_name is not None:
+        out_file_name = Path(out_file_name)
+        Path(out_file_name).parent.mkdir(exist_ok=True, parents=True)
+        cv2.imwrite(out_file_name.as_posix(), out_img)
+
+    return out_img
+
 def generate_shadow(img, blur_amount=48, generate_mask=False, display=False):
 
     if generate_mask:
@@ -616,14 +736,45 @@ def find_thumb_center():
 
     pass
 
+
+def example_embed_singleline_between_fingres():
+
+    # singleline_file = 'C:/Users/Moshe/Sync/Projects/3d_printing/images/backgrounds/mother_and_child.jpeg'
+    # singleline_file = 'C:/Users/Moshe/Sync/Projects/3d_printing/images/backgrounds/rabbit.jpeg'
+    # singleline_file = 'C:/Users/Moshe/Sync/Projects/3d_printing/images/backgrounds/princess_and_butterfly.png'
+    singleline_file = 'C:/Users/Moshe/Sync/Projects/3d_printing/images/backgrounds/teddy_bear.jpeg'
+
+
+    output_root_dir = 'C:/Users/Moshe/Sync/Projects/3d_printing/images/backgrounds/output/'
+    output_subdir = '12_dedicated_function'
+    out_file = '{}_between_hands.png'.format(Path(singleline_file).stem)
+
+    out_file_name = Path(output_root_dir) / output_subdir / out_file
+
+    embed_singleline_between_fingers(singleline_file,
+                                     resize_singleline=(1000, 1000),
+                                     out_img_shape=(1600, 1200, 3),
+                                     hand_type='bottom_left',
+                                     singleline_shadow_shift=-25,
+                                     hand_shadow_shift=-10,
+                                     blur_amount=32,
+                                     th_gray=150,
+                                     display=0,
+                                     out_file_name=out_file_name,
+                                     )
+
+    pass
+
+
 if __name__ == '__main__':
 
     # example_embed_single_line_on_background()
     # playground_embed_singeline_between_fingers()
     # playground_2_embed_singeline_between_fingers()
-    playground_3_embed_singleline_between_fingers()
+    # playground_3_embed_singleline_between_fingers()
     # find_singleline_bottom_left_example()
     # find_thumb_center()
+    example_embed_singleline_between_fingres()
 
 
     pass
