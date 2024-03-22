@@ -176,7 +176,7 @@ def example_embed_single_line_on_background():
 
 
 def embed_singleline_between_fingers(singleline_img_or_file,
-                                     resize_singleline=(1000, 1000),
+                                     resize_singleline=(750, 750),
                                      out_img_shape=(1600, 1200, 3),
                                      hand_type='bottom_left',
                                      singleline_shadow_shift=-25,
@@ -228,13 +228,14 @@ def embed_singleline_between_fingers(singleline_img_or_file,
         hand_1_file = (Path(__file__).parent / 'images' / 'hand_bottom_left_1.png').as_posix()
         hand_2_file = (Path(__file__).parent / 'images' / 'hand_bottom_left_2.png').as_posix()
         thumb_center_orig_xy = (300, 230)  # values for hand_bottom_left_2.png, in original img coordinates
-        hand_shift_top_left = (0, -80)
+        hand_shift_top_left = (0, -580)
+        width_percentage = 0.1  # where fingers will hold the single-line
     elif hand_type == 'center':
-        # FIXME
-        # hand_1_file = Path(__file__).parent / 'images' / 'hand_bottom_left_1.png'
-        # hand_2_file = Path(__file__).parent / 'images' / 'hand_bottom_left_2.png'
-        # thumb_center_orig_xy=(300, 230)  # values for hand_bottom_left_2.png, in original img coordinates
-        # hand_shift_top_left = (0, -80)
+        hand_1_file = (Path(__file__).parent / 'images' / 'hand_center_1.png').as_posix()
+        hand_2_file = (Path(__file__).parent / 'images' / 'hand_center_2.png').as_posix()
+        thumb_center_orig_xy=(315, 210)  # values for hand_bottom_left_2.png, in original img coordinates
+        hand_shift_top_left = (0, -300)
+        width_percentage = 0.4  # where fingers will hold the single-line
         pass
 
     # read images
@@ -249,11 +250,11 @@ def embed_singleline_between_fingers(singleline_img_or_file,
 
     # set top-left position of different objects
     top = bg.shape[0] - hand_1.shape[0] + hand_shift_top_left[0]
-    left = hand_shift_top_left[1]
+    left = bg.shape[1] - singleline.shape[1] + hand_shift_top_left[1]
     top_left_hand = (top, left)
 
     # get singleline top left position
-    left, bottom = find_singleline_bottom_left(singleline, th_gray=10, inverse=True, display=display>1)
+    left, bottom = find_singleline_bottom_left(singleline, th_gray=10, width_percentage=width_percentage, inverse=True, display=display>1)
     thumb_center_xy = (top_left_hand[1] + thumb_center_orig_xy[0], top_left_hand[0] + thumb_center_orig_xy[1])
     top_singleline = thumb_center_xy[1] - bottom
     left_singleline = thumb_center_xy[0] - left
@@ -409,7 +410,7 @@ def find_singleline_bottom_left_example():
 
     pass
 
-def find_singleline_bottom_left(img, th_gray=10, inverse=True, display=False):
+def find_singleline_bottom_left(img, th_gray=10, width_percentage=0.1, inverse=True, display=False):
 
     # get foreground mask
     gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
@@ -421,7 +422,7 @@ def find_singleline_bottom_left(img, th_gray=10, inverse=True, display=False):
     bottom_inds_non_zero = np.where(bottom_inds > 0)[0]
     bottom_inds = bottom_inds[bottom_inds_non_zero]
     width = bottom_inds_non_zero.max() - bottom_inds_non_zero.min()
-    bottom_ind = int(0.1 * width)  # take point 10% inside the single-line
+    bottom_ind = int(width_percentage * width)  # take point 10% inside the single-line
     bottom = bottom_inds[bottom_ind]
     left = bottom_inds_non_zero[bottom_ind]
 
@@ -452,13 +453,29 @@ def last_nonzero(arr, axis, invalid_val=-1):
 
 def find_thumb_center():
 
-    hand_1_file = 'C:/Users/Moshe/Sync/Projects/3d_printing/images/backgrounds/hand_bottom_left_1.png'
-    hand_2_file = 'C:/Users/Moshe/Sync/Projects/3d_printing/images/backgrounds/hand_bottom_left_2.png'
+    # bottom left
+    hand_1_file = (Path(__file__).parent / 'images' / 'hand_bottom_left_1.png').as_posix()
+    hand_2_file = (Path(__file__).parent / 'images' / 'hand_bottom_left_2.png').as_posix()
     hand_1 = cv2.imread(hand_1_file, cv2.IMREAD_COLOR)
     hand_2 = cv2.imread(hand_2_file, cv2.IMREAD_COLOR)
 
     left = 300
     bottom = 230
+
+    hand_2_with_circle = cv2.circle(hand_2, (left, bottom), 10, (0, 0, 255), -1)
+
+    cv2.imshow('hand_2_with_circle', hand_2_with_circle)
+    cv2.waitKey(0)
+    cv2.destroyAllWindows()
+
+    # center
+    hand_1_file = (Path(__file__).parent / 'images' / 'hand_center_1.png').as_posix()
+    hand_2_file = (Path(__file__).parent / 'images' / 'hand_center_2.png').as_posix()
+    hand_1 = cv2.imread(hand_1_file, cv2.IMREAD_COLOR)
+    hand_2 = cv2.imread(hand_2_file, cv2.IMREAD_COLOR)
+
+    left = 315
+    bottom = 210
 
     hand_2_with_circle = cv2.circle(hand_2, (left, bottom), 10, (0, 0, 255), -1)
 
@@ -473,20 +490,22 @@ def example_embed_singleline_between_fingres():
 
     # singleline_file = 'C:/Users/Moshe/Sync/Projects/3d_printing/images/backgrounds/mother_and_child.jpeg'
     # singleline_file = 'C:/Users/Moshe/Sync/Projects/3d_printing/images/backgrounds/rabbit.jpeg'
-    # singleline_file = 'C:/Users/Moshe/Sync/Projects/3d_printing/images/backgrounds/princess_and_butterfly.png'
-    singleline_file = 'C:/Users/Moshe/Sync/Projects/3d_printing/images/backgrounds/teddy_bear.jpeg'
+    singleline_file = 'C:/Users/Moshe/Sync/Projects/3d_printing/images/backgrounds/princess_and_butterfly.png'
+    # singleline_file = 'C:/Users/Moshe/Sync/Projects/3d_printing/images/backgrounds/teddy_bear.jpeg'
 
+    hand_type = 'bottom_left'
+    # hand_type = 'center'
 
     output_root_dir = 'C:/Users/Moshe/Sync/Projects/3d_printing/images/backgrounds/output/'
     output_subdir = '12_dedicated_function'
-    out_file = '{}_between_hands.png'.format(Path(singleline_file).stem)
+    out_file = '{}_between_hands_{}.png'.format(Path(singleline_file).stem, hand_type)
 
     out_file_name = Path(output_root_dir) / output_subdir / out_file
 
     embed_singleline_between_fingers(singleline_file,
-                                     resize_singleline=(1000, 1000),
+                                     resize_singleline=(750, 750),
                                      out_img_shape=(1600, 1200, 3),
-                                     hand_type='bottom_left',
+                                     hand_type=hand_type,
                                      singleline_shadow_shift=-25,
                                      hand_shadow_shift=-10,
                                      blur_amount=32,
@@ -501,9 +520,6 @@ def example_embed_singleline_between_fingres():
 if __name__ == '__main__':
 
     # example_embed_single_line_on_background()
-    # playground_embed_singeline_between_fingers()
-    # playground_2_embed_singeline_between_fingers()
-    # playground_3_embed_singleline_between_fingers()
     # find_singleline_bottom_left_example()
     # find_thumb_center()
     example_embed_singleline_between_fingres()
