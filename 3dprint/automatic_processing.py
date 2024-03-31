@@ -324,7 +324,7 @@ def main_root_dir():
     # se_size_closing = 5
 
     thick_type_list = ['closing', 'dilate', 'dilate_closing', 'closing_dilate']
-    se_size_list = [5, 10]
+    se_size_list = [3, 5, 10]
     se_size_closing = 5
 
     # thick_type_list = ['closing_dilate']
