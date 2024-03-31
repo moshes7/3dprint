@@ -455,19 +455,23 @@ def find_thumb_center():
 
 def example_embed_singleline_between_fingres():
 
-    singleline_file = 'C:/Users/Moshe/Sync/Projects/3d_printing/images/backgrounds/mother_and_child.jpeg'
+    images_root_dir = Path('C:/Users/shay/Desktop/projects/images/backgrounds')
+
+    singleline_file = images_root_dir / 'mother_and_child.jpeg'
     # singleline_file = 'C:/Users/Moshe/Sync/Projects/3d_printing/images/backgrounds/rabbit.jpeg'
     # singleline_file = 'C:/Users/Moshe/Sync/Projects/3d_printing/images/backgrounds/princess_and_butterfly.png'
     # singleline_file = 'C:/Users/Moshe/Sync/Projects/3d_printing/images/backgrounds/teddy_bear.jpeg'
 
-    hand_type = 'bottom_left'
-    # hand_type = 'center'
+    # hand_type = 'bottom_left'
+    hand_type = 'center'
 
-    output_root_dir = 'C:/Users/Moshe/Sync/Projects/3d_printing/images/backgrounds/output/'
+    # output_root_dir = 'C:/Users/Moshe/Sync/Projects/3d_printing/images/backgrounds/output/'
+    output_root_dir = Path(__file__).parents[2] / 'outputs'
     output_subdir = '12_dedicated_function'
     out_file = '{}_between_hands_{}.png'.format(Path(singleline_file).stem, hand_type)
 
     out_file_name = Path(output_root_dir) / output_subdir / out_file
+    singleline_file = singleline_file.as_posix()
 
     embed_singleline_between_fingers(singleline_file,
                                      resize_singleline=(750, 750),
@@ -486,21 +490,24 @@ def example_embed_singleline_between_fingres():
 
 def example_embed_single_line_on_background():
 
+    images_root_dir = Path('C:/Users/shay/Desktop/projects/images/backgrounds')
+
     img_file_list = [
-        'C:/Users/Moshe/Sync/Projects/3d_printing/images/backgrounds/rabbit.jpeg',
-        'C:/Users/Moshe/Sync/Projects/3d_printing/images/backgrounds/teddy_bear.jpeg',
-        'C:/Users/Moshe/Sync/Projects/3d_printing/images/backgrounds/mother_and_child.jpeg',
+        images_root_dir / 'rabbit.jpeg',
+        images_root_dir / 'teddy_bear.jpeg',
+        images_root_dir / 'mother_and_child.jpeg',
     ]
 
     background_file_list = [
-        'C:/Users/Moshe/Sync/Projects/3d_printing/images/backgrounds/background_1.jpg',
-        'C:/Users/Moshe/Sync/Projects/3d_printing/images/backgrounds/background_2.jpg',
-        'C:/Users/Moshe/Sync/Projects/3d_printing/images/backgrounds/background_3.jpg',
+        images_root_dir / 'background_1.jpg',
+        images_root_dir / 'background_2.jpg',
+        images_root_dir / 'background_3.jpg',
     ]
 
     display = 1
 
-    output_root_dir = 'C:/Users/Moshe/Sync/Projects/3d_printing/images/backgrounds/output/'
+    #output_root_dir = 'C:/Users/Moshe/Sync/Projects/3d_printing/images/backgrounds/output/'
+    output_root_dir = Path(__file__).parents[2] / 'outputs'
     output_subdir = '13_improved_img_on_bg'
 
     for img_file in img_file_list:
@@ -509,7 +516,7 @@ def example_embed_single_line_on_background():
             out_file = '{}_on_{}.png'.format(Path(img_file).stem, Path(background_file).stem)
             out_file_name = Path(output_root_dir) / output_subdir / out_file
 
-            embed_single_line_on_background(img_file, background_file,
+            embed_single_line_on_background(img_file.as_posix(), background_file.as_posix(),
                                             size_wh_wanted=(1024, 1024),
                                             left_top=(1600, 750),
                                             out_file_name=out_file_name,
@@ -522,8 +529,8 @@ if __name__ == '__main__':
 
     # find_singleline_bottom_left_example()
     # find_thumb_center()
-    # example_embed_singleline_between_fingres()
-    example_embed_single_line_on_background()
+    example_embed_singleline_between_fingres()
+    # example_embed_single_line_on_background()
 
 
     pass
