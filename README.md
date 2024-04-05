@@ -8,7 +8,7 @@ virtualenv print3d -p python3.8  # 3.8 or higher
 source print3d/bin/activate  # on linux
 ```
 
-install print3d
+Install `print3d`
 ```
 git clone https://github.com/moshes7/print3d
 cd print3d
