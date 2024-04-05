@@ -18,4 +18,5 @@ pip install -e .
 
 ## Usage
 ### Embed single-line images
+see [example_embed_images.py](print3d/examples/example_embed_images.py)
 

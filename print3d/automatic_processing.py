@@ -3,7 +3,7 @@ from tqdm import tqdm
 
 import cv2
 import numpy as np
-import pymorph
+from print3d import pymorph
 # import skimage
 
 def resize(image, width=None, height=None, inter=cv2.INTER_AREA):
