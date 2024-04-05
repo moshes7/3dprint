@@ -1,6 +1,6 @@
 from setuptools import setup, find_packages
 
-setup(name='3dprint',
+setup(name='print3d',
       version='0.1',
       description='Process images for 3D printing',
       author='Moshe Shilemay',
