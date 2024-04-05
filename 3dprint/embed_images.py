@@ -192,15 +192,15 @@ def embed_singleline_between_fingers(singleline_img_or_file,
     assert hand_type in ['bottom_left', 'center']
 
     if hand_type == 'bottom_left':
-        hand_1_file = (Path(__file__).parent / 'images' / 'hand_bottom_left_1.png').as_posix()
-        hand_2_file = (Path(__file__).parent / 'images' / 'hand_bottom_left_2.png').as_posix()
+        hand_1_file = (Path(__file__).parent / 'images' / 'hands' / 'hand_bottom_left_1.png').as_posix()
+        hand_2_file = (Path(__file__).parent / 'images' / 'hands' / 'hand_bottom_left_2.png').as_posix()
         thumb_center_orig_xy = (300, 230)  # values for hand_bottom_left_2.png, in original img coordinates
         hand_shift_top_left = (0, -580)
         width_percentage = 0.1  # where fingers will hold the single-line
     elif hand_type == 'center':
-        hand_1_file = (Path(__file__).parent / 'images' / 'hand_center_1.png').as_posix()
-        hand_2_file = (Path(__file__).parent / 'images' / 'hand_center_2.png').as_posix()
-        thumb_center_orig_xy=(315, 210)  # values for hand_bottom_left_2.png, in original img coordinates
+        hand_1_file = (Path(__file__).parent / 'images' / 'hands' / 'hand_center_1.png').as_posix()
+        hand_2_file = (Path(__file__).parent / 'images' / 'hands' / 'hand_center_2.png').as_posix()
+        thumb_center_orig_xy = (315, 210)  # values for hand_bottom_left_2.png, in original img coordinates
         hand_shift_top_left = (0, -300)
         width_percentage = 0.4  # where fingers will hold the single-line
         pass
@@ -455,23 +455,19 @@ def find_thumb_center():
 
 def example_embed_singleline_between_fingres():
 
-    images_root_dir = Path('C:/Users/shay/Desktop/projects/images/backgrounds')
-
-    singleline_file = images_root_dir / 'mother_and_child.jpeg'
+    singleline_file = 'C:/Users/Moshe/Sync/Projects/3d_printing/images/backgrounds/mother_and_child.jpeg'
     # singleline_file = 'C:/Users/Moshe/Sync/Projects/3d_printing/images/backgrounds/rabbit.jpeg'
     # singleline_file = 'C:/Users/Moshe/Sync/Projects/3d_printing/images/backgrounds/princess_and_butterfly.png'
     # singleline_file = 'C:/Users/Moshe/Sync/Projects/3d_printing/images/backgrounds/teddy_bear.jpeg'
 
-    # hand_type = 'bottom_left'
-    hand_type = 'center'
+    hand_type = 'bottom_left'
+    # hand_type = 'center'
 
-    # output_root_dir = 'C:/Users/Moshe/Sync/Projects/3d_printing/images/backgrounds/output/'
-    output_root_dir = Path(__file__).parents[2] / 'outputs'
+    output_root_dir = 'C:/Users/Moshe/Sync/Projects/3d_printing/images/backgrounds/output/'
     output_subdir = '12_dedicated_function'
     out_file = '{}_between_hands_{}.png'.format(Path(singleline_file).stem, hand_type)
 
     out_file_name = Path(output_root_dir) / output_subdir / out_file
-    singleline_file = singleline_file.as_posix()
 
     embed_singleline_between_fingers(singleline_file,
                                      resize_singleline=(750, 750),
@@ -490,24 +486,21 @@ def example_embed_singleline_between_fingres():
 
 def example_embed_single_line_on_background():
 
-    images_root_dir = Path('C:/Users/shay/Desktop/projects/images/backgrounds')
-
     img_file_list = [
-        images_root_dir / 'rabbit.jpeg',
-        images_root_dir / 'teddy_bear.jpeg',
-        images_root_dir / 'mother_and_child.jpeg',
+        'C:/Users/Moshe/Sync/Projects/3d_printing/images/backgrounds/rabbit.jpeg',
+        'C:/Users/Moshe/Sync/Projects/3d_printing/images/backgrounds/teddy_bear.jpeg',
+        'C:/Users/Moshe/Sync/Projects/3d_printing/images/backgrounds/mother_and_child.jpeg',
     ]
 
     background_file_list = [
-        images_root_dir / 'background_1.jpg',
-        images_root_dir / 'background_2.jpg',
-        images_root_dir / 'background_3.jpg',
+        'C:/Users/Moshe/Sync/Projects/3d_printing/images/backgrounds/background_1.jpg',
+        'C:/Users/Moshe/Sync/Projects/3d_printing/images/backgrounds/background_2.jpg',
+        'C:/Users/Moshe/Sync/Projects/3d_printing/images/backgrounds/background_3.jpg',
     ]
 
     display = 1
 
-    #output_root_dir = 'C:/Users/Moshe/Sync/Projects/3d_printing/images/backgrounds/output/'
-    output_root_dir = Path(__file__).parents[2] / 'outputs'
+    output_root_dir = 'C:/Users/Moshe/Sync/Projects/3d_printing/images/backgrounds/output/'
     output_subdir = '13_improved_img_on_bg'
 
     for img_file in img_file_list:
@@ -516,7 +509,7 @@ def example_embed_single_line_on_background():
             out_file = '{}_on_{}.png'.format(Path(img_file).stem, Path(background_file).stem)
             out_file_name = Path(output_root_dir) / output_subdir / out_file
 
-            embed_single_line_on_background(img_file.as_posix(), background_file.as_posix(),
+            embed_single_line_on_background(img_file, background_file,
                                             size_wh_wanted=(1024, 1024),
                                             left_top=(1600, 750),
                                             out_file_name=out_file_name,
@@ -525,12 +518,81 @@ def example_embed_single_line_on_background():
     pass
 
 
+def embed_images_wrapper(singleline_file, background_file_list, output_dir,
+                          display=0,
+                          finger_params={'resize_singleline': (750, 750),
+                                         'out_img_shape': (1000, 1200, 3),
+                                         'hand_type_list': ['bottom_left', 'center'],
+                                         },
+                          ):
+
+    output_dir = Path(output_dir)
+    output_dir.mkdir(exist_ok=True, parents=True)
+
+    output_file_list = []
+
+    for hand_type in finger_params['hand_type_list']:
+        output_file_name = output_dir / '{}_between_single_{}.png'.format(Path(singleline_file).stem, hand_type)
+        output_file_list.append(output_file_name.as_posix())
+        embed_singleline_between_fingers(singleline_file,
+                                         resize_singleline=finger_params['resize_singleline'],
+                                         out_img_shape=finger_params['out_img_shape'],
+                                         hand_type=hand_type,
+                                         singleline_shadow_shift=-25,
+                                         hand_shadow_shift=-10,
+                                         blur_amount=32,
+                                         th_gray=150,
+                                         display=display,
+                                         out_file_name=output_file_name,
+                                         )
+
+
+    # for background_file in background_file_list:
+    #     out_file = '{}_on_{}.png'.format(Path(img_file).stem, Path(background_file).stem)
+    #     out_file_name = Path(output_root_dir) / output_subdir / out_file
+    #
+    #     embed_single_line_on_background(img_file, background_file,
+    #                                     size_wh_wanted=(1024, 1024),
+    #                                     left_top=(1600, 750),
+    #                                     out_file_name=out_file_name,
+    #                                     display=display)
+
+
+    return output_file_list
+
+def example_embed_images_wrapper():
+
+    singleline_file = Path(__file__).parent / 'images' / 'singlelines' / 'mother_and_child.jpeg'
+    output_dir = Path(__file__).parents[2] / 'output' / 'example_embed_images_wrapper'
+
+    background_file_list = [
+        'C:/Users/Moshe/Sync/Projects/3d_printing/images/backgrounds/background_1.jpg',
+        'C:/Users/Moshe/Sync/Projects/3d_printing/images/backgrounds/background_2.jpg',
+        'C:/Users/Moshe/Sync/Projects/3d_printing/images/backgrounds/background_3.jpg',
+    ]
+
+
+    singleline_file = singleline_file.as_posix()  # convert to str
+
+    output_file_list = embed_images_wrapper(singleline_file, background_file_list, output_dir,
+                                            display=0,
+                                            finger_params={'resize_singleline': (750, 750),
+                                                           'out_img_shape': (1000, 1200, 3),
+                                                           'hand_type_list': ['bottom_left', 'center'],
+                                                           },
+                                            )
+
+
+    pass
+
+
 if __name__ == '__main__':
 
     # find_singleline_bottom_left_example()
     # find_thumb_center()
-    example_embed_singleline_between_fingres()
+    # example_embed_singleline_between_fingres()
     # example_embed_single_line_on_background()
+    example_embed_images_wrapper()
 
 
     pass
