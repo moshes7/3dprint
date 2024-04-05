@@ -453,8 +453,9 @@ def find_thumb_center():
     pass
 
 
-def example_embed_singleline_between_fingres():
+def example_embed_singleline_between_fingers():
 
+    singleline_file =         (Path(__file__).parent / 'images' / 'singlelines' / 'rabbit.jpeg').as_posix(),
     singleline_file = 'C:/Users/Moshe/Sync/Projects/3d_printing/images/backgrounds/mother_and_child.jpeg'
     # singleline_file = 'C:/Users/Moshe/Sync/Projects/3d_printing/images/backgrounds/rabbit.jpeg'
     # singleline_file = 'C:/Users/Moshe/Sync/Projects/3d_printing/images/backgrounds/princess_and_butterfly.png'
@@ -487,15 +488,15 @@ def example_embed_singleline_between_fingres():
 def example_embed_single_line_on_background():
 
     img_file_list = [
-        'C:/Users/Moshe/Sync/Projects/3d_printing/images/backgrounds/rabbit.jpeg',
-        'C:/Users/Moshe/Sync/Projects/3d_printing/images/backgrounds/teddy_bear.jpeg',
-        'C:/Users/Moshe/Sync/Projects/3d_printing/images/backgrounds/mother_and_child.jpeg',
+        (Path(__file__).parent / 'images' / 'singlelines' / 'rabbit.jpeg').as_posix(),
+        (Path(__file__).parent / 'images' / 'singlelines' / 'teddy_bear.jpeg').as_posix(),
+        (Path(__file__).parent / 'images' / 'singlelines' / 'mother_and_child.jpeg').as_posix(),
     ]
 
     background_file_list = [
-        'C:/Users/Moshe/Sync/Projects/3d_printing/images/backgrounds/background_1.jpg',
-        'C:/Users/Moshe/Sync/Projects/3d_printing/images/backgrounds/background_2.jpg',
-        'C:/Users/Moshe/Sync/Projects/3d_printing/images/backgrounds/background_3.jpg',
+        (Path(__file__).parent / 'images' / 'backgrounds' / 'background_1.jpg').as_posix(),
+        (Path(__file__).parent / 'images' / 'backgrounds' / 'background_2.jpg').as_posix(),
+        (Path(__file__).parent / 'images' / 'backgrounds' / 'background_3.jpg').as_posix(),
     ]
 
     display = 1
@@ -519,21 +520,27 @@ def example_embed_single_line_on_background():
 
 
 def embed_images_wrapper(singleline_file, background_file_list, output_dir,
-                          display=0,
-                          finger_params={'resize_singleline': (750, 750),
-                                         'out_img_shape': (1000, 1200, 3),
-                                         'hand_type_list': ['bottom_left', 'center'],
-                                         },
-                          ):
+                         display=0,
+                         img_out_type='jpg',
+                         finger_params={'resize_singleline': (750, 750),
+                                        'out_img_shape': (1000, 1200, 3),
+                                        'hand_type_list': ['bottom_left', 'center'],
+                                        },
+                         background_params={'size_wh_wanted': (1024, 1024),
+                                            'left_top':(1600, 750),
+                                            }
+                         ):
+
+    assert img_out_type in ['png', 'jpg']
 
     output_dir = Path(output_dir)
     output_dir.mkdir(exist_ok=True, parents=True)
 
-    output_file_list = []
+    out_file_list = []
 
     for hand_type in finger_params['hand_type_list']:
-        output_file_name = output_dir / '{}_between_single_{}.png'.format(Path(singleline_file).stem, hand_type)
-        output_file_list.append(output_file_name.as_posix())
+        out_file_name = output_dir / '{}_between_single_{}.{}'.format(Path(singleline_file).stem, hand_type, img_out_type)
+        out_file_list.append(out_file_name.as_posix())
         embed_singleline_between_fingers(singleline_file,
                                          resize_singleline=finger_params['resize_singleline'],
                                          out_img_shape=finger_params['out_img_shape'],
@@ -543,22 +550,20 @@ def embed_images_wrapper(singleline_file, background_file_list, output_dir,
                                          blur_amount=32,
                                          th_gray=150,
                                          display=display,
-                                         out_file_name=output_file_name,
+                                         out_file_name=out_file_name,
                                          )
 
+    for n, background_file in enumerate(background_file_list):
+        out_file_name = output_dir / '{}_on_{}.{}'.format(Path(singleline_file).stem, Path(background_file).stem, img_out_type)
+        out_file_list.append(out_file_name.as_posix())
+        embed_single_line_on_background(singleline_file, background_file,
+                                        size_wh_wanted=background_params['size_wh_wanted'][n],
+                                        left_top=background_params['left_top'][n],
+                                        out_file_name=out_file_name,
+                                        display=display)
 
-    # for background_file in background_file_list:
-    #     out_file = '{}_on_{}.png'.format(Path(img_file).stem, Path(background_file).stem)
-    #     out_file_name = Path(output_root_dir) / output_subdir / out_file
-    #
-    #     embed_single_line_on_background(img_file, background_file,
-    #                                     size_wh_wanted=(1024, 1024),
-    #                                     left_top=(1600, 750),
-    #                                     out_file_name=out_file_name,
-    #                                     display=display)
+    return out_file_list
 
-
-    return output_file_list
 
 def example_embed_images_wrapper():
 
@@ -566,22 +571,27 @@ def example_embed_images_wrapper():
     output_dir = Path(__file__).parents[2] / 'output' / 'example_embed_images_wrapper'
 
     background_file_list = [
-        'C:/Users/Moshe/Sync/Projects/3d_printing/images/backgrounds/background_1.jpg',
-        'C:/Users/Moshe/Sync/Projects/3d_printing/images/backgrounds/background_2.jpg',
-        'C:/Users/Moshe/Sync/Projects/3d_printing/images/backgrounds/background_3.jpg',
+        (Path(__file__).parent / 'images' / 'backgrounds' / 'background_1.jpg').as_posix(),
+        (Path(__file__).parent / 'images' / 'backgrounds' / 'background_2.jpg').as_posix(),
+        (Path(__file__).parent / 'images' / 'backgrounds' / 'background_3.jpg').as_posix(),
     ]
 
+    bg_size_wh_wanted_list = [(1024, 1024), (1024, 1024), (1200, 1200)]
+    bg_top_left_list = [(1550, 750), (1900, 500), (1100, 1000)]
 
     singleline_file = singleline_file.as_posix()  # convert to str
 
-    output_file_list = embed_images_wrapper(singleline_file, background_file_list, output_dir,
+    out_file_list = embed_images_wrapper(singleline_file, background_file_list, output_dir,
                                             display=0,
+                                            img_out_type='jpg',
                                             finger_params={'resize_singleline': (750, 750),
                                                            'out_img_shape': (1000, 1200, 3),
                                                            'hand_type_list': ['bottom_left', 'center'],
                                                            },
-                                            )
-
+                                             background_params={'size_wh_wanted': bg_size_wh_wanted_list,
+                                                                'left_top': bg_top_left_list,
+                                                                }
+                                         )
 
     pass
 
@@ -590,7 +600,7 @@ if __name__ == '__main__':
 
     # find_singleline_bottom_left_example()
     # find_thumb_center()
-    # example_embed_singleline_between_fingres()
+    # example_embed_singleline_between_fingers()
     # example_embed_single_line_on_background()
     example_embed_images_wrapper()
 
